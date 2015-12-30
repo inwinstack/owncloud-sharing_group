@@ -100,6 +100,14 @@ class Data{
 
     }
 
+    public static function removeUserFromOwner($uid) {
+        $query = DB::prepare('DELETE `*PREFIX*sharing_groups`, `*PREFIX*sharing_group_user` FROM `*PREFIX*sharing_groups` INNER JOIN `*PREFIX*sharing_group_user` WHERE `*PREFIX*sharing_groups`.uid = `*PREFIX*sharing_group_user`.owner AND `*PREFIX*sharing_groups`.uid= ?');
+        
+        $query->execute(array($uid));
+
+    }
+
+
     public static function addUserToGroup($gid, $uids) {
         $user = User::getUser();
         $sql = 'INSERT INTO `*PREFIX*sharing_group_user` (`gid`, `uid`, `owner`) VALUES';
@@ -288,7 +296,7 @@ class Data{
 
         return  $query->execute(array($user));
     }
-
+    
     public static function export() {
         $result = self::queryAllGroupsByUser();
         //$result = $query->execute(array($user));

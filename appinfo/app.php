@@ -20,7 +20,7 @@ $container->query('UserHooks')->register();
 
 $container->query('OCP\INavigationManager')->add(function () use ($container) {
 	$urlGenerator = $container->query('OCP\IURLGenerator');
-	$l10n = $container->query('OCP\IL10N');
+	$l10n = \OC::$server->getL10N('sharing_group');
 	return [
 		// the string under which your app will be referenced in owncloud
 		'id' => 'sharing_group',
@@ -41,13 +41,17 @@ $container->query('OCP\INavigationManager')->add(function () use ($container) {
 		'name' => $l10n->t('Sharing Group'),
 	];
 });
+
 if(defined('\OCP\Share::SHARE_TYPE_SHARING_GROUP')) {
-
+    
     \OCA\Sharing_Group\FilesHooksStatic::register();
-
+    
     \OC::$server->getActivityManager()->registerExtension(function() {
             return new \OCA\Sharing_Group\Activity(
-                \OC::$server->query('L10NFactory')
+                \OC::$server->query('L10NFactory'),
+                \OC::$server->getURLGenerator(),
+                \OC::$server->getActivityManager()
             );
     });
 }
+

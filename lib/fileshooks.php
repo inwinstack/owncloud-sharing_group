@@ -5,49 +5,79 @@ namespace OCA\Sharing_Group;
 use OC\Files\Filesystem;
 use OC\Files\View;
 use OCA\Activity\Extension\Files;
+use OCA\Activity\Data;
+use OCA\Activity\UserSettings;
 use OCA\Activity\Extension\Files_Sharing;
-use OCP\Activity\IExtension;
-use OCP\DB;
+use OCP\Activity\IManager;
+use OCP\Files\Mount\IMountPoint;
+use OCP\IDBConnection;
+use OCP\IGroupManager;
 use OCP\Share;
 use OCP\Util;
-
 class FilesHooks extends \OCA\Activity\FilesHooks {
     
-    protected $activityData;
+  	protected $manager;
+
+	/** @var \OCA\Activity\Data */
+	protected $activityData;
 
 	/** @var \OCA\Activity\UserSettings */
 	protected $userSettings;
 
+	/** @var \OCP\IGroupManager */
+	protected $groupManager;
+
+	/** @var \OCP\IDBConnection */
+	protected $connection;
+
+	/** @var \OC\Files\View */
+	protected $view;
+
 	/** @var string|false */
 	protected $currentUser;
 
-    
-
-    public function __construct(\OCA\Activity\Data $activityData, UserSettings $userSettings, $currentUser) {
+	/**
+	 * Constructor
+	 *
+	 * @param IManager $manager
+	 * @param Data $activityData
+	 * @param UserSettings $userSettings
+	 * @param IGroupManager $groupManager
+	 * @param View $view
+	 * @param IDBConnection $connection
+	 * @param string|false $currentUser
+	 */
+	public function __construct(IManager $manager, Data $activityData, UserSettings $userSettings, IGroupManager $groupManager, View $view, IDBConnection $connection, $currentUser) {
+		$this->manager = $manager;
 		$this->activityData = $activityData;
 		$this->userSettings = $userSettings;
+		$this->groupManager = $groupManager;
+		$this->view = $view;
+		$this->connection = $connection;
 		$this->currentUser = $currentUser;
 	}
 
     public function share($params) {
         if ($params['itemType'] === 'file' || $params['itemType'] === 'folder') {
             if($params['shareType'] === Share::SHARE_TYPE_SHARING_GROUP) {
-                $this->shareFileOrFolderWithGroup($params);
+                $this->shareFileOrFolderWithGroup($params['shareWith'], (int) $params['fileSource'], $params['itemType'], $params['fileTarget'], (int) $params['id']);
             }
         }
     }
 
 
-    protected function shareFileOrFolderWithGroup($params) {
-		// User performing the share
-        $subject = 'shared_sharing_group_self';
-		$this->shareNotificationForSharer($subject, $params['shareWith'], $params['fileSource'], $params['itemType']);
-
-		// Members of the new group
+    protected function shareFileOrFolderWithGroup($shareWith, $fileSource, $itemType, $fileTarget, $shareId) {
+	    // Members of the new group
 		$affectedUsers = array();
-		$usersInGroup = Data::readGroupUsers($params['shareWith']);
+
+		// User performing the share
+		$this->shareNotificationForSharer('shared_sharing_group_self', $shareWith, $fileSource, $itemType);
+		$this->shareNotificationForOriginalOwners($this->currentUser, 'reshared_sharing_group_by', $shareWith, $fileSource, $itemType);
+
+
+		$usersInGroup = \OCA\Sharing_Group\Data::readGroupUsers($shareWith);
 		foreach ($usersInGroup as $user) {
-			$affectedUsers[$user] = $params['fileTarget'];
+			$affectedUsers[$user] = $fileTarget;
 		}
 
 		// Remove the triggering user, we already managed his notifications
@@ -57,36 +87,27 @@ class FilesHooks extends \OCA\Activity\FilesHooks {
 			return;
 		}
 
-		$filteredStreamUsersInGroup = $this->userSettings->filterUsersBySetting($usersInGroup, 'stream', Files_Sharing::TYPE_SHARED);
-		$filteredEmailUsersInGroup = $this->userSettings->filterUsersBySetting($usersInGroup, 'email', Files_Sharing::TYPE_SHARED);
+		$filteredStreamUsersInGroup = $this->userSettings->filterUsersBySetting(array_keys($affectedUsers), 'stream', Files_Sharing::TYPE_SHARED);
+		$filteredEmailUsersInGroup = $this->userSettings->filterUsersBySetting(array_keys($affectedUsers), 'email', Files_Sharing::TYPE_SHARED);
 
-		// Check when there was a naming conflict and the target is different
-		// for some of the users
-		$query = DB::prepare('SELECT `share_with`, `file_target` FROM `*PREFIX*share` WHERE `parent` = ? ');
-		$result = $query->execute(array($params['id']));
-		if (DB::isError($result)) {
-			Util::writeLog('OCA\Activity\Hooks::shareFileOrFolderWithGroup', DB::getErrorMessage($result), Util::ERROR);
-		} else {
-			while ($row = $result->fetchRow()) {
-				$affectedUsers[$row['share_with']] = $row['file_target'];
-			}
-		}
-        
+		$affectedUsers = $this->fixPathsForShareExceptions($affectedUsers, $shareId);
 		foreach ($affectedUsers as $user => $path) {
 			if (empty($filteredStreamUsersInGroup[$user]) && empty($filteredEmailUsersInGroup[$user])) {
 				continue;
 			}
-            
+
 			$this->addNotificationsForUser(
 				$user, 'shared_with_by', array($path, $this->currentUser),
-				$path, ($params['itemType'] === 'file'),
+				$fileSource, $path, ($itemType === 'file'),
 				!empty($filteredStreamUsersInGroup[$user]),
 				!empty($filteredEmailUsersInGroup[$user]) ? $filteredEmailUsersInGroup[$user] : 0
 			);
 		}
 	}
 
-    protected function addNotificationsForUser($user, $subject, $subjectParams, $path, $isFile, $streamSetting, $emailSetting, $type = Files_Sharing::TYPE_SHARED, $priority = IExtension::PRIORITY_MEDIUM) {
+
+
+    protected function addNotificationsForUser($user, $subject, $subjectParams, $fileId, $path, $isFile, $streamSetting, $emailSetting, $type = Files_Sharing::TYPE_SHARED) {
 		if (!$streamSetting && !$emailSetting) {
 			return;
 		}
@@ -97,17 +118,30 @@ class FilesHooks extends \OCA\Activity\FilesHooks {
 			'dir' => ($isFile) ? dirname($path) : $path,
 		));
 
+		$objectType = ($fileId) ? 'files' : '';
+
+		$event = $this->manager->generateEvent();
+		$event->setApp($app)
+			->setType($type)
+			->setAffectedUser($user)
+			->setAuthor($this->currentUser)
+			->setTimestamp(time())
+			->setSubject($subject, $subjectParams)
+			->setObject($objectType, $fileId, $path)
+			->setLink($link);
+
 		// Add activity to stream
 		if ($streamSetting && (!$selfAction || $this->userSettings->getUserSetting($this->currentUser, 'setting', 'self'))) {
-			$this->activityData->send($app, $subject, $subjectParams, '', array(), $path, $link, $user, $type, $priority);
+			$this->activityData->send($event);
 		}
 
 		// Add activity to mail queue
 		if ($emailSetting && (!$selfAction || $this->userSettings->getUserSetting($this->currentUser, 'setting', 'selfemail'))) {
 			$latestSend = time() + $emailSetting;
-			$this->activityData->storeMail($app, $subject, $subjectParams, $user, $type, $latestSend);
+			$this->activityData->storeMail($event, $latestSend);
 		}
 	}
+
 
 
 }

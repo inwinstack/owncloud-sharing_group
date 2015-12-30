@@ -41,10 +41,17 @@ class Application extends App {
         });
 
         $container->registerService('Hooks', function(IContainer $c) {
+            /** @var \OC\Server $server */
+            $server = $c->query('ServerContainer');
+
 			return new FilesHooks(
+				$server->getActivityManager(),
 				$c->query('ActivityApplication')->getContainer()->query('ActivityData'),
 				$c->query('ActivityApplication')->getContainer()->query('UserSettings'),
-				$c->query('ActivityApplication')->getContainer()->query('CurrentUID')
+                $server->getGroupManager(),
+				new View(''),
+				$server->getDatabaseConnection(),
+				$c->query('CurrentUID')
 			);
 		});
 
