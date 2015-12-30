@@ -8,8 +8,8 @@ use OC\L10N\Factory;
 class Activity implements IExtension {
 
     const SUBJECT_SHARED_SHARING_GROUP_SELF = 'shared_sharing_group_self';
+	const SUBJECT_SHARED_WITH_BY = 'shared_with_by';
     const TYPE_SHARED = 'shared';
-     
     protected $languageFactory;
     protected $groups = array();
 
@@ -52,7 +52,10 @@ class Activity implements IExtension {
                 } else {
                     return (string) $l->t('You shared %1$s with a sharing group which has been deleted',$params);
                 }
+            } else if($text === self::SUBJECT_SHARED_WITH_BY) {
+				return (string) $l->t('%2$s shared %1$s with you', $params);
             }
+            
         }
 
     }
