@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<info>
+    <id>sharing_group</id>
+    <name>Sharing Group</name>
+    <description>test</description>
+    <licence>AGPL</licence>
+    <author>Eric</author>
+    <version>0.0.2</version>
+    <namespace>Sharing_Group</namespace>
+    <category>other</category>
+    <dependencies>
+        <owncloud min-version="8.1" />
+    </dependencies>
+</info>
