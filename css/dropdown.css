@@ -1,0 +1,202 @@
+/* toolbar  */
+.sg-toolbar{
+    display: inline-block;
+    float: left;
+    padding: 4px;
+}
+
+/* dropdown */
+.sg-dropdown{
+    display: inline-block;
+    position: relative;
+}
+
+.sg-dropdown-toggle{
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    padding: 6px 12px;
+    height: 36px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.sg-dropdown-toggle:hover{
+    background: #eee;
+}
+
+.sg-dropdown-toggle .caret,
+.sg-dropdown .icon{
+    vertical-align: middle;
+}
+
+.caret{
+    border-top: 4px dashed;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+    display: inline-block;
+    height: 0;
+    margin-left: 2px;
+    vertical-align: middle;
+    width: 0;
+}
+
+.sg-dropdown .caret{
+    margin-left: 5px;
+}
+
+.sg-dropdown .icon{
+    display: inline-block;
+}
+
+.sg-dropdown-menu{
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    left: 0;
+    list-style: none;
+    margin: 0;
+    min-width: 160px;
+    padding: 5px 0;
+    position: absolute;
+    text-align: left;
+    top: 38px;
+    z-index: 1000;
+}
+
+.sg-dropdown-menu>li>a{
+    color: #333;
+    display: block;
+    height: 30px;
+    padding: 5px 10px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.sg-dropdown-menu>li>a:hover{
+    background: #f3f3f3;
+}
+
+/* dropdown scrollable */
+.sg-dropdown-scrollable{
+    max-height: 210px;
+    overflow-x: auto;
+    overflow-y: scroll;
+}
+
+/* dropdown body */
+.sg-dropdown-body>ul{
+    color: #333;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sg-dropdown-body>ul>li{
+    height: 30px;
+    padding: 5px 10px;
+}
+
+.sg-dropdown-body>ul>li:hover{
+    background: #f3f3f3;
+}
+
+.sg-dropdown-body>ul>li input{
+    vertical-align: middle;
+}
+
+.sg-dropdown-body label{
+    cursor: pointer;
+    margin-left: 5px;
+}
+
+/* dropdown footer */
+.sg-dropdown-footer{
+    border-top: 1px solid #e5e5e5;
+    padding-top: 5px;
+}
+
+/* button */
+.btn-flat{
+    background-color: #fff;
+    border-color: #e5e5e5;
+    border-radius: 4px;
+    color: #555;
+    cursor: pointer;
+    display: inline-block;
+    padding: 6px 12px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.btn-flat:hover,
+.btn-flat:focus,
+.btn-flat:active{
+    color: #1d88cc;
+}
+
+.btn-group{
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.btn-group>.btn-flat{
+    position: relative;
+    float: left;
+}
+
+.btn-group>.btn-flat:first-child{
+    border-right: 1px solid #e5e5e5;
+    margin-left: 0
+}
+
+.btn-group-justified{
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+}
+
+.btn-group-justified>.btn-flat{
+    display: table-cell;
+    float: none;
+    width: 1%;
+}
+
+.btn-group>.btn-flat:first-child:not(:last-child):not(.dropdown-toggle){
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* checkbox card */
+.checkbox-card{
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 1px 5px #eee;
+    color: #666;
+    cursor: pointer;
+    display: inline-block;
+    margin: 5px;
+    padding: 5px 8px;
+    width: 200px;
+}
+
+.checkbox-card:hover{
+    background: #eee;
+}
+
+.checkbox-card.checked{
+    border-color: #1d88cc;
+    transition: border-color .25s ease;
+}
+
+.checkbox-card input[type="checkbox"]{
+    vertical-align: middle;
+}
+
+.checkbox-card span{
+    margin-left: 5px;
+}
+

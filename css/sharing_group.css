@@ -1,0 +1,9 @@
+.ui-status-error{
+    border:1px solid #FF0000;
+}
+li .ui-status-error {
+    border:1px solid #FF0000;
+}
+.group .ui-status-error {
+    border:1px solid #FF0000;
+}
