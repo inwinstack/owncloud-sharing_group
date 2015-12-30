@@ -5,7 +5,6 @@ namespace OCA\Sharing_Group;
 use OC\Files\Filesystem;
 use OC\Files\View;
 use OCA\Activity\Extension\Files;
-use OCA\Activity\Data;
 use OCA\Activity\UserSettings;
 use OCA\Activity\Extension\Files_Sharing;
 use OCP\Activity\IManager;
@@ -47,7 +46,7 @@ class FilesHooks extends \OCA\Activity\FilesHooks {
 	 * @param IDBConnection $connection
 	 * @param string|false $currentUser
 	 */
-	public function __construct(IManager $manager, Data $activityData, UserSettings $userSettings, IGroupManager $groupManager, View $view, IDBConnection $connection, $currentUser) {
+	public function __construct(IManager $manager, \OCA\Activity\Data $activityData, UserSettings $userSettings, IGroupManager $groupManager, View $view, IDBConnection $connection, $currentUser) {
 		$this->manager = $manager;
 		$this->activityData = $activityData;
 		$this->userSettings = $userSettings;
@@ -75,7 +74,7 @@ class FilesHooks extends \OCA\Activity\FilesHooks {
 		$this->shareNotificationForOriginalOwners($this->currentUser, 'reshared_sharing_group_by', $shareWith, $fileSource, $itemType);
 
 
-		$usersInGroup = \OCA\Sharing_Group\Data::readGroupUsers($shareWith);
+		$usersInGroup = Data::readGroupUsers($shareWith);
 		foreach ($usersInGroup as $user) {
 			$affectedUsers[$user] = $fileTarget;
 		}
