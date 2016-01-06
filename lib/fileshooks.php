@@ -23,7 +23,7 @@ class FilesHooks extends \OCA\Activity\FilesHooks {
 
     
 
-    public function __construct(\OCA\Activity\Data $activityData, UserSettings $userSettings, $currentUser) {
+    public function __construct(\OCA\Activity\Data $activityData, \OCA\Activity\UserSettings $userSettings, $currentUser) {
 		$this->activityData = $activityData;
 		$this->userSettings = $userSettings;
 		$this->currentUser = $currentUser;
