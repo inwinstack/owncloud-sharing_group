@@ -6,6 +6,7 @@
     <licence>AGPL</licence>
     <author>Eric</author>
     <version>0.0.2</version>
+    <default_enable/>
     <namespace>Sharing_Group</namespace>
     <category>other</category>
     <dependencies>
