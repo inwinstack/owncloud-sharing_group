@@ -143,7 +143,8 @@ class Data{
     }
     
     public static function createGroups($name) {
-        if(empty(self::findGroupByName($name))) {
+	$groups = self::findGroupByName($name);
+        if(empty($groups)) {
             $user = User::getUser();
             $sql = 'INSERT INTO `*PREFIX*sharing_groups` (`name`, `uid`) VALUES(?, ?)';
             $query = DB::prepare($sql);
