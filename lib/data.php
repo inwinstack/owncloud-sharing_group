@@ -143,21 +143,21 @@ class Data{
     }
     
     public static function createGroups($name) {
-	$groups = self::findGroupByName($name);
+	    $groups = self::findGroupByName($name);
         if(empty($groups)) {
             $user = User::getUser();
             $sql = 'INSERT INTO `*PREFIX*sharing_groups` (`name`, `uid`) VALUES(?, ?)';
             $query = DB::prepare($sql);
             $result = $query->execute(array($name, $user));
+        
+            if (DB::isError($result)) {
+			    Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
             
-        }
-        if (DB::isError($result)) {
-			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
-            
-            return 'error';
-        }
+                return 'error';
+            }
     
-        return 'success';
+            return 'success';
+        }
     }
     
     public static function deleteGroup($gid) {
