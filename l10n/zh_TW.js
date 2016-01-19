@@ -29,7 +29,8 @@ OC.L10N.register(
     "CANCEL" : "取消",
     "All" : "全選",
     "None" : "清空",
-    "Inverse": "反選"
-
+    "Inverse": "反選",
+    "export": "匯出",
+    "import": "匯入"
 },
 "nplurals=1; plural=0;");

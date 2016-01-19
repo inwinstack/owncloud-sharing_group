@@ -6,8 +6,8 @@
 	</div>
 	<div id="app-settings-content">
         <!-- Your settings in here -->
-        <button class="export" id="export">export</button>
-        <button class="import" id="import" >import</button>
+        <button class="export" id="export"><?php p($l->t('export'))?></button>
+        <button class="import" id="import"><?php p($l->t('import'))?></button>
         <input type='file' class="upload"  name="fileToUpload" id="upload" style="display:none"/>
     </div>
 </div>
