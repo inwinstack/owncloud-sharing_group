@@ -24,7 +24,7 @@ OC.L10N.register(
     "Add Group" : "新增群組",
     "Group" : "群組",
     "Everyone" : "所有人",
-    "Group" : "群組",
+    "Groups" : "群組",
     "APPLY" : "送出",
     "CANCEL" : "取消",
     "All" : "全選",
