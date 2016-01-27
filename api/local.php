@@ -1,4 +1,30 @@
 <?php
+/**
+ * @author Björn Schießle <schiessle@owncloud.com>
+ * @author Joas Schilling <nickvergessen@owncloud.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
+ * @author Robin Appelman <icewind@owncloud.com>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
+ * @author Thomas Müller <thomas.mueller@tmit.eu>
+ * @author Vincent Petry <pvince81@owncloud.com>
+ *
+ * @copyright Copyright (c) 2015, ownCloud, Inc.
+ * @license AGPL-3.0
+ *
+ * This code is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License, version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License, version 3,
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ *
+ */
+
 namespace OCA\Sharing_Group\API;
 
 use OC\HintException;
@@ -61,7 +87,7 @@ class Local extends \OCA\Files_Sharing\API\Local {
 
 	}
 
-    /**
+	/**
 	 * get share information for a given share
 	 *
 	 * @param array $params which contains a 'id'
@@ -185,6 +211,15 @@ class Local extends \OCA\Files_Sharing\API\Local {
 			// workaround because folders are named 'dir' in this context
 			$itemType = $file['type'] === 'file' ? 'file' : 'folder';
 			$share = \OCP\Share::getItemShared($itemType, $file['fileid']);
+
+            /**
+                TODO 
+                owncloud client can't identify SHARE_TYPE_SHARING_GROUP.
+                So use this solution to filter share type of sharing group.
+                Until the owncloud client can identify sharing group.
+            **/
+            $share = array_filter($share, array(self, 'isSharingGroup'));    
+
 			if($share) {
 				$receivedFrom =  \OCP\Share::getItemSharedWithBySource($itemType, $file['fileid']);
 				reset($share);
@@ -199,6 +234,18 @@ class Local extends \OCA\Files_Sharing\API\Local {
 
 		return new \OC_OCS_Result($result);
 	}
+
+    /**
+        TODO 
+        owncloud client can't identify SHARE_TYPE_SHARING_GROUP.
+        So use this solution to filter share type of sharing group.
+        Until the owncloud client can identify sharing group.
+    **/
+
+    private static function isSharingGroup($var) {
+        return $var['share_type'] != \OCP\Share::SHARE_TYPE_SHARING_GROUP;    
+    }
+
 
 	/**
 	 * get files shared with the user
@@ -337,7 +384,7 @@ class Local extends \OCA\Files_Sharing\API\Local {
 		}
 	}
 
-	/**
+    /**
 	 * update shares, e.g. password, permissions, etc
 	 * @param array $params shareId 'id' and the parameter we want to update
 	 *                      currently supported: permissions, password, publicUpload
@@ -619,4 +666,3 @@ class Local extends \OCA\Files_Sharing\API\Local {
 	}
 
 }
-?>
