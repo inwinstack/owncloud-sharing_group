@@ -213,10 +213,10 @@ class Local extends \OCA\Files_Sharing\API\Local {
 			$share = \OCP\Share::getItemShared($itemType, $file['fileid']);
 
             /**
-                TODO 
-                owncloud client can't identify SHARE_TYPE_SHARING_GROUP.
-                So use this solution to filter share type of sharing group.
-                Until the owncloud client can identify sharing group.
+             * TODO 
+             * owncloud client can't identify SHARE_TYPE_SHARING_GROUP.
+             * So use this solution to filter share type of sharing group.
+             * Until the owncloud client can identify sharing group.
             **/
             $share = array_filter($share, array(self, 'isSharingGroup'));    
 
@@ -236,10 +236,10 @@ class Local extends \OCA\Files_Sharing\API\Local {
 	}
 
     /**
-        TODO 
-        owncloud client can't identify SHARE_TYPE_SHARING_GROUP.
-        So use this solution to filter share type of sharing group.
-        Until the owncloud client can identify sharing group.
+     * TODO 
+     * owncloud client can't identify SHARE_TYPE_SHARING_GROUP.
+     * So use this solution to filter share type of sharing group.
+     * Until the owncloud client can identify sharing group.
     **/
 
     private static function isSharingGroup($var) {
