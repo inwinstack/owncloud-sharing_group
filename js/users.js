@@ -7,6 +7,7 @@ var $userList,
 var UserList = {
 	availableGroups: [],
 	offset: 0,
+    user: $.Deferred(),
 	usersToLoad: 10, //So many users will be loaded when user scrolls down
 	currentGid: '',
 
@@ -225,6 +226,36 @@ var UserList = {
         UserList.checktristate();
     },
 
+    append: function(users, limit) {
+        if(!limit) {
+			limit = UserList.usersToLoad;
+		}
+        $.each(users.data, function (userId, userName) {
+            UserList.addLabel(userId,userName);
+        });
+        
+        if (users.length > 0) {
+            $userList.siblings('.loading').css('visibility', 'hidden');
+            // reset state on load
+            UserList.noMoreEntries = false;
+        }
+        else {
+            UserList.noMoreEntries = true;
+            $userList.siblings('.loading').css('visibility', 'hidden');
+        }
+        UserList.offset += limit;
+    },
+    
+    init: function (users) {
+        var userid = Object.keys(users.data);
+        $('#checkuser').data({
+            'user': userid,
+            'checkeduser':[] ,
+            'different': [],
+            'origin': 'unchecked',
+        });
+        $('#user-list').data('users',users.data);
+    },
     update: function (gid, limit) {
 		if (UserList.updating) {
 			return;
@@ -235,9 +266,9 @@ var UserList = {
 		$userList.siblings('.loading').css('visibility', 'visible');
 		UserList.updating = true;
 		if(gid === undefined) {
-			gid = '';
+			gid = '_everyone';
 		}
-		UserList.currentGid = gid;
+        UserList.currentGid = gid;
         var pattern = filter.getPattern();
 		$.get(
 			OC.generateUrl('/apps/sharing_group/user'),
@@ -248,30 +279,14 @@ var UserList = {
                 pattern: pattern 
             },
 			function (users) {
-                var userid = Object.keys(users.data);
-                $('#checkuser').data({
-                    'user': userid,
-                    'checkeduser':[] ,
-                    'different': [],
-                    'origin': 'unchecked',
-                });
-                $('#user-list').data('users',users.data);
-
-                $.each(users.data, function (userId, userName) {
-                    UserList.addLabel(userId,userName);
-                });
-				
-                if (users.length > 0) {
+                if(UserList.currentGid != '_everyone') {
+                    UserList.user.resolve(users);
 					$userList.siblings('.loading').css('visibility', 'hidden');
-					// reset state on load
-					UserList.noMoreEntries = false;
-				}
-				else {
-					UserList.noMoreEntries = true;
-					$userList.siblings('.loading').remove();
-				}
-				UserList.offset += limit;
-			}).always(function() {
+                    return;
+                }
+                UserList.init(users);
+                UserList.append(users, limit);
+            }).always(function() {
 				UserList.updating = false;
 			});
     },
@@ -388,4 +403,20 @@ $(function () {
    
     // trigger loading of users on startup
 	UserList.update(UserList.currentGid, initialUserCountLimit);
+    $.when(UserList.user, GroupList.group).done(function (users, groups){
+        
+	    $GroupListLi.siblings('.loading').remove();
+        $.each(groups.data, function(index, group) {
+            GroupList.groups.push(group.id);
+            GroupList.groups_name.push(group.name);
+
+            $GroupListLi.after(GroupList.addLi(group.id, group.name, group.count, group.user));
+            GroupList.sortGroups();
+        });
+        UserList.init(users);
+
+        if(UserList.currentGid == '') {
+            UserList.append(users);
+        }
+    });
 });

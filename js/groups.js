@@ -6,6 +6,7 @@ var $groupList,
 var GroupList = {
 	everyoneGID: '_everyone',
     groups: [],
+    group: $.Deferred(),
     groups_name: [],
 
     elementBelongsToAddGroup: function(el) {
@@ -35,13 +36,17 @@ var GroupList = {
                 'checkeduser':[]
             });
 	        if (gid === '_everyone') {
+                UserList.currentGid = gid; 
+                
+		        $userList.siblings('.loading').css('visibility', 'visible');
                 UserList.update(gid);
             }
             else {
-                
+                UserList.currentGid = gid; 
                 var usersInGroup = $('#group-list').data(gid);
                 var users = $('#user-list').data('users');
                 
+                $userList.siblings('.loading').css('visibility', 'hidden');
                 if(usersInGroup.length === 0) {
                     UserList.addLabel();
                 }
@@ -237,13 +242,7 @@ var GroupList = {
 			OC.generateUrl('/apps/sharing_group/getAllGroupsInfo'),
 			function(result) {
                 if (gids == undefined) {
-                    $.each(result.data, function(index, group) {
-                        GroupList.groups.push(group.id);
-                        GroupList.groups_name.push(group.name);
-
-                        $GroupListLi.after(GroupList.addLi(group.id, group.name, group.count, group.user));
-                        GroupList.sortGroups();
-                    });
+                    GroupList.group.resolve(result);
                 }
                 else {
                     $.each(result.data, function(index, group) {
@@ -390,12 +389,17 @@ var GroupList = {
 $(function() {
 	$groupList = $('#group-list');
 	$GroupListLi = $('#group-list #everyone-group');
-	GroupList.showGroupList();
+	$GroupListLi.after($('<div class="loading" style="height: 200px; visibility: visible;"></div>'));
+    GroupList.showGroupList();
     // Display or hide of Create Group List Element
 	$('#newgroup-form').hide();
 	$('#newgroup-init').on('click', function(e) {
+        if(UserList.updating) { 
+	        return;
+        }
+
         GroupList.toggleAddGroup(e);
-	});
+    });
     
     
 	$(document).on('click', function(event) {
@@ -433,6 +437,9 @@ $(function() {
 
 	// click on group name
 	$groupList.on('click', 'li.isgroup', function(event) {
+        if(UserList.updating) {
+            return;
+        }
         var group = $(this);
         if($(event.target).is('.action.delete')) {
 			var id = group.find('a').closest('li').data('gid');
