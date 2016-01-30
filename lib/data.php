@@ -234,7 +234,6 @@ class Data{
         $result = $query->execute(array($user));
         $allgroup = self::getAllGroupsQueryResult($result);
 
-
         if ($type == 'ignore') {
                  
             for($i = 0; $i < $length; $i++) {
@@ -552,7 +551,12 @@ class Data{
             $temp['id'] = $data[0];
             $temp['group'] = $data[1];
             if (in_array($data[2],$users)) {
-                $temp['uid'] = $data[2] == '' ? '' : array($data[2]);
+                if($data[2] == User::getUser()) {
+                    $temp['uid'] = '';
+                }
+                else {
+                    $temp['uid'] = $data[2] == '' ? '' : array($data[2]);
+                }
                 for($j = 0; $j < count($result); $j++) {
                     if($data[1] == $result[$j]['group'] && $data[2] != NULL) {
                         $result[$j]['uid'][] = $data[2];
