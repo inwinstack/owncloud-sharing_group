@@ -29,7 +29,7 @@ namespace OCA\Sharing_Group\API;
 
 use OC\HintException;
 
-class Local extends \OCA\Files_Sharing\API\Local {
+class Local {
 
     public static function getAllShares($params) {
 		if (isset($_GET['shared_with_me']) && $_GET['shared_with_me'] !== 'false') {
@@ -218,8 +218,7 @@ class Local extends \OCA\Files_Sharing\API\Local {
              * So use this solution to filter share type of sharing group.
              * Until the owncloud client can identify sharing group.
             **/
-            $share = array_filter($share, array('\OCA\Shairng_Group\API\Local', 'isSharingGroup')); 
-
+            $share = array_filter($share, array('OCA\Sharing_Group\API\Local', 'isSharingGroup')); 
 			if($share) {
 				$receivedFrom =  \OCP\Share::getItemSharedWithBySource($itemType, $file['fileid']);
 				reset($share);
