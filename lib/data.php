@@ -6,7 +6,12 @@ use OCP\User;
 use OCP\Util;
 
 class Data{
-    
+    /**
+     *  Add users to group or remove users from group
+     *
+     *  @param  $data 
+     *  @return succees|error
+     */
     public function controlGroupUser($data) {
         $user = User::getUser();
         $sql_add = 'INSERT INTO `*PREFIX*sharing_group_user` (`gid`, `uid`, `owner`) VALUES';
@@ -35,11 +40,6 @@ class Data{
                 $share_check = self::getSharingQueryResult($check); 
                 
                 if(!empty($share_check)) {
-                    /*
-                    for($i = 0; $i < count($share_check); $i++){
-                        array_push($share_arr,$share_check[$i]['id']);
-                    }
-                    */
                     array_push($share_arr,$share_check[0]['id']);
                     for($i = 1; $i < count($share_check); $i++){
                         array_push($share_arr,$share_check[$i]['id']);
@@ -93,21 +93,50 @@ class Data{
 
     }
 
+    /**
+     *  remove user from group
+     *
+     *  @param String $uid the username
+     *  @return success|error
+     */
     public static function removeUserFromGroup($uid) {
         $query = DB::prepare('DELETE FROM `*PREFIX*sharing_group_user` WHERE `uid`= ?');
+        $result = $query->execute(array($uid));
         
-        $query->execute(array($uid));
+        if(DB::isError($result) ) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
 
+        return 'success';
     }
-
+    
+    /**
+     *  Remove sharing group's user when Owner has been deleted
+     *
+     *  @param String $uid  the Owner's name
+     *  @return success|error
+     */
     public static function removeUserFromOwner($uid) {
         $query = DB::prepare('DELETE `*PREFIX*sharing_groups`, `*PREFIX*sharing_group_user` FROM `*PREFIX*sharing_groups` INNER JOIN `*PREFIX*sharing_group_user` WHERE `*PREFIX*sharing_groups`.uid = `*PREFIX*sharing_group_user`.owner AND `*PREFIX*sharing_groups`.uid= ?');
-        
-        $query->execute(array($uid));
+        $result = $query->execute(array($uid));
+        if(DB::isError($result) ) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
 
+        return 'success';
     }
-
-
+    
+    /**
+     *  Add user to group
+     *
+     *  @param String $gid the sharing group name
+     *  @param String $uids the username
+     *  @return success|error
+     */
     public static function addUserToGroup($gid, $uids) {
         $user = User::getUser();
         $sql = 'INSERT INTO `*PREFIX*sharing_group_user` (`gid`, `uid`, `owner`) VALUES';
@@ -132,7 +161,14 @@ class Data{
         }
         return 'success';
     }
-
+    
+    /**
+     *  Get the user's sharing groups
+     *
+     *  @param String|null $user
+     *  @param String|null $filter
+     *  @return function getGroupsQueryResult
+     */
     public static function readGroups($user = '', $filter = '') {
 
         $user = $user !== '' ? $user : User::getUser();
@@ -142,6 +178,12 @@ class Data{
         return self::getGroupsQueryResult($result, $filter);
     }
     
+    /**
+     *  create groups
+     *
+     *  @param  String $name the sharing group name
+     *  @return success|error
+     */
     public static function createGroups($name) {
 	    $groups = self::findGroupByName($name);
         if(empty($groups)) {
@@ -160,9 +202,14 @@ class Data{
         }
     }
     
+    /**
+     *  delete group
+     *
+     *  @param  int $gid the sharing group id 
+     *  @return success|error
+     */
     public static function deleteGroup($gid) {
         $user = User::getUser();
-        
         
         $sql = 'DELETE FROM `*PREFIX*sharing_group_user` WHERE `gid` = ?';
         $query = DB::prepare($sql);
@@ -172,11 +219,6 @@ class Data{
         $query = DB::prepare($sql);
         $delete = $query->execute(array($gid));
         
-        /*
-        $sql = 'DELETE `*PREFIX*sharing_groups`, `*PREFIX*sharing_group_user` FROM `*PREFIX*sharing_groups` INNER JOIN `*PREFIX*sharing_group_user` WHERE `*PREFIX*sharing_groups`.id = `*PREFIX*sharing_group_user`.gid AND `id` = ?';
-        $query = DB::prepare($sql);
-        $delete = $query->execute(array($gid));
-        */
         if(!DB::isError($delete)) {
             $sql = 'SELECT `id` FROM `*PREFIX*share` WHERE `share_type` = ? AND `share_with` = ?';
             $query = DB::prepare($sql);
@@ -198,8 +240,15 @@ class Data{
         }
         
         return 'success';
-  }
-
+    }
+    
+    /**
+     *  rename group
+     *
+     *  @param  $gid the sharing group id
+     *  @param  $newname the sharing group name
+     *  @return success|error
+     */
     public static function renameGroup($gid, $newname) {
         $user = User::getUser();
         $sql = 'UPDATE `*PREFIX*sharing_groups` SET `name` = ? WHERE `id` = ? AND `uid` = ?';
@@ -214,7 +263,13 @@ class Data{
         
         return 'success';
     }
-
+    
+    /**
+     *  Use group name to find group id
+     *
+     *  @param  $name the sharing group name
+     *  @return function getGroupIdQueryResult
+     */
     public static function findGroupByName($name) {
         $user = User::getUser();
         $sql = 'SELECT `id` FROM `*PREFIX*sharing_groups` WHERE `name` = ? AND `uid` = ?';
@@ -224,6 +279,13 @@ class Data{
         return self::getGroupIdQueryResult($result);
     }
     
+    /**
+     *  import group for current user
+     *
+     *  @param  $files the csv file
+     *  @param  $type 
+     *  @return Array $gids
+     */
     public static function importGroup($files, $type = 'ignore') {
         $user = User::getUser();
         $importdata = self::importDataHanlder($files); 
@@ -289,6 +351,11 @@ class Data{
         }
     }
     
+    /**
+     *  get all sharing group for current user
+     *
+     *  @return 
+     */
     public static function queryAllGroupsByUser() {
         $user = User::getUser();
         $sql = 'SELECT id, name , *PREFIX*sharing_group_user.uid FROM *PREFIX*sharing_groups LEFT OUTER JOIN *PREFIX*sharing_group_user ON *PREFIX*sharing_groups.id = *PREFIX*sharing_group_user.gid WHERE *PREFIX*sharing_groups.uid = ?';
@@ -297,9 +364,13 @@ class Data{
         return  $query->execute(array($user));
     }
     
+    /**
+     *  export sharing group and group user
+     *
+     *  @return string $string
+     */
     public static function export() {
         $result = self::queryAllGroupsByUser();
-        //$result = $query->execute(array($user));
         $string = "";
         
         if (DB::isError($result)) {
@@ -319,6 +390,11 @@ class Data{
         return $string;
     }
     
+    /**
+     *  get all sharing group and group user
+     *
+     *  @return array $data contains sharing group and group user
+     */
     public static function getAllGroupsInfo() {
         $result = self::queryAllGroupsByUser();
         $data = [];
@@ -350,6 +426,13 @@ class Data{
         return $data;
     }
    
+    /**
+     *  find sharing group name by sharing group id
+     *  
+     *  @param int $id sharing group id
+     *  @param string|null $user the sharing group owner
+     *  @return function getGroupsQueryResult
+     */
     public static function findGroupById($id = '', $user = '') {
         $user = ($user !== '') ? $user : User::getUser();
         $sql = $id ? 'SELECT `id` ,`name` FROM `*PREFIX*sharing_groups` WHERE `id` = ?' : 'SELECT `id` ,`name` FROM `*PREFIX*sharing_groups` WHERE `uid` = ?';
@@ -361,6 +444,11 @@ class Data{
         return self::getGroupsQueryResult($result, '');
     }
     
+    /**
+     *  find all sharing group 
+     *  
+     *  @return function getGroupsQueryResult
+     */
     public static function findAllGroup() {
         $query = DB::prepare('SELECT `id` ,`name` FROM `*PREFIX*sharing_groups`');
         $result = $query->execute();
@@ -368,7 +456,11 @@ class Data{
         return self::getGroupsQueryResult($result, '');
     }
 
-    
+    /**
+     *  count all users 
+     *  
+     *  @return function getEveryoneCountQueryResult
+     */
     public static function countAllUsers() {
         $sql = 'SELECT COUNT(uid) FROM `*PREFIX*users`';
         $query = DB::prepare($sql);
@@ -376,7 +468,12 @@ class Data{
         
         return self::getEveryoneCountQueryResult($result); 
     }
-
+    
+    /**
+     *  get all users 
+     *  
+     *  @return function getGroupUserQueryResult
+     */
     public static function readAllUsers() {
         $sql = 'SELECT `uid` FROM `*PREFIX*users`';
         $query = DB::prepare($sql);
@@ -384,7 +481,13 @@ class Data{
         
         return self::getGroupUserQueryResult($result); 
     }
-
+    
+    /**
+     *  get group user by shraing group id
+     *  
+     *  @param int $id the sharing group id
+     *  @return function getGroupUserQueryResult
+     */
     public static function readGroupUsers($id) {
         $sql = 'SELECT `uid` FROM `*PREFIX*sharing_group_user` WHERE `gid` = ?';
         $query = DB::prepare($sql);
@@ -393,13 +496,25 @@ class Data{
         return self::getGroupUserQueryResult($result); 
     }
 
+    /**
+     *  get sharing group by shraing group user
+     *  
+     *  @param string $user the sharing group user
+     *  @return function getUserGroupQueryResult
+     */
     public static function readUserGroups($user) {
         $query = DB::prepare('SELECT `gid` FROM `*PREFIX*sharing_group_user` WHERE `uid` = ?');
         $result = $query->execute(array($user));
         
         return self::getUserGroupQueryResult($result);
     }
-
+    
+    /**
+     *  Get sharing group name by shraing group id
+     *  
+     *  @param int $id the sharing group id
+     *  @return string|null
+     */
     public static function getGroupName($id) {
         $query = DB::prepare('SELECT `name` FROM `*PREFIX*sharing_groups` WHERE `id` = ?');
         $result = $query->execute(array($id));
@@ -413,7 +528,14 @@ class Data{
         
         return $row !== null ? $row['name'] : null;
     }
-
+    
+    /**
+     *  Check the user in the sharing group or not
+     *  
+     *  @param int $gid the sharing group id
+     *  @param string $uid the sharing group user 
+     *  @return bool
+     */
     public static function inGroup($uid, $gid) {
         $query = DB::prepare('SELECT `uid` FROM `*PREFIX*sharing_group_user` WHERE `gid` = ? AND `uid` = ?');
         $result = $query->execute(array($gid,$uid));
@@ -426,6 +548,12 @@ class Data{
         return $result !== null;
     }
     
+    /**
+     *  Process the result and return the sharing group name
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|null
+     */
     private static function getAllGroupsQueryResult($result) {
         $data = [];
 
@@ -441,6 +569,12 @@ class Data{
         return $data;
     }
     
+    /**
+     *  Process the result and return the sharing group id
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|error
+     */
     private static function getGroupIdQueryResult($result) {
         $data = '';
         if(DB::isError($result)) {
@@ -455,7 +589,13 @@ class Data{
 
         return $data;
     }
-
+    
+    /**
+     *  Process the result and return the sharing group user
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|null
+     */
     private static function getGroupUserQueryResult($result) {
         $data = [];
 
@@ -471,7 +611,13 @@ class Data{
         natcasesort($data);
         return $data;
     }
-
+    
+    /**
+     *  Process the result and return the sharing group id
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|null
+     */
     private static function getUserGroupQueryResult($result) {
         $data = [];
 
@@ -488,6 +634,13 @@ class Data{
         return $data;
     }
     
+    /**
+     *  Process the result and return the sharing groups
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @param string $filter
+     *  @return array|null
+     */
     private static function getGroupsQueryResult($result, $filter) {
         $data = [];
 
@@ -505,7 +658,13 @@ class Data{
         
         return $data;
     }
-
+    
+    /**
+     *  Process the result and return the users count
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return int|null
+     */
     private static function getEveryoneCountQueryResult($result) {
     
         if (DB::isError($result)) {
@@ -520,6 +679,12 @@ class Data{
         return $data;
     }
     
+    /**
+     *  Process the result and return the sharing group id
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|null
+     */
     private static function getSharingQueryResult($result) {
         $data = [];
 
@@ -527,8 +692,7 @@ class Data{
 			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
             
             return;
-        }
-        
+        } 
 
         while ($row = $result->fetchRow()) {
             $share = array('id' => $row['id']);
@@ -537,7 +701,13 @@ class Data{
         
         return $data;
     }
-
+    
+    /**
+     *  Process the csv file and return an array contains sharing group and group user 
+     *  
+     *  @param  $file csv file
+     *  @return array
+     */
     private static function importDataHanlder($files) {
         $result = [];
         $users = self::readAllUsers(); 
@@ -565,7 +735,6 @@ class Data{
                 }
             }
             $result[] = $temp;
-            
         }
        
        return $result;
