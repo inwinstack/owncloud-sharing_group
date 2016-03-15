@@ -12,10 +12,18 @@ use OCP\IRequest;
 use OCP\User;
 
 class SharingGroupsController extends Controller{
-
+    
+    /** @var Data */
    	protected $data;
+    /** @var String*/
     protected $user;
-
+    
+    /**
+     * @param String $appName
+     * @param Data $data
+     * @param IRequest $request
+     * @param String $user CurrentUser 
+     */
 	public function __construct($appName, IRequest $request, Data $data, $user) {
 		parent::__construct($appName, $request);
 		$this->data = $data;
@@ -24,6 +32,9 @@ class SharingGroupsController extends Controller{
     
     /**
      * @NoAdminRequired
+     *
+     * @param String $filter
+     * @param DataResponse
      */
     public function getCategory($filter = '') {
         $result = $this->data->readForSearchlist($this->user , $filter);
@@ -33,6 +44,10 @@ class SharingGroupsController extends Controller{
 
     /**
      * @NoAdminRequired
+     *
+     * Add users to group or remove users from group
+     * @param array $multigroup
+     * @return JSONResponse
      */
     public function controlGroupUser($multigroup) {
         foreach($multigroup as $gid => $action) {
@@ -50,6 +65,10 @@ class SharingGroupsController extends Controller{
        
     /**
      * @NoAdminRequired
+     *
+     * create sharing group by name
+     * @param String $name
+     * @return JSONResponse
      */
     public function create($name) {
         $response = array();
@@ -60,9 +79,13 @@ class SharingGroupsController extends Controller{
 
         return new JSONResponse($response);
     }
-    
+   
     /**
      * @NoAdminRequired
+     *  
+     * Delete sharing group by sharing group id
+     * @param int $gid
+     * @return JSONResponse
      */
     public function deleteGroup($gid) {
         $result = $this->data->deleteGroup($gid);
@@ -73,6 +96,10 @@ class SharingGroupsController extends Controller{
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
+     *
+     * Import sharing group from csv file
+     * @param csv file $data
+     * @return DataResponse
      */
     public function importGroup($data) {
         $files = $this->request->getUploadedFile('fileToUpload'); 
@@ -84,6 +111,9 @@ class SharingGroupsController extends Controller{
     /**
      * @NoAdminRequired
      * @NoCSRFRequired
+     * 
+     * Export sharing group to csv file
+     * @return csv file $Download
      */
     public function export() {
         $data = $this->data->export();
@@ -95,6 +125,11 @@ class SharingGroupsController extends Controller{
     
     /**
      * @NoAdminRequired
+     * 
+     * Rename sharing group by sharing group id
+     * @param int $gid
+     * @param String $newname
+     * @return JSONResponse
      */
     public function renameGroup($gid, $newname) {
         $check = $this->data->findGroupByName($newname);
@@ -107,6 +142,9 @@ class SharingGroupsController extends Controller{
     
     /**
      * @NoAdminRequired
+     * 
+     * Get all sharing groups info
+     * @return JSONResponse
      */
     public function getAllGroupsInfo() {
         $result = $this->data->getAllGroupsInfo(); 
@@ -115,6 +153,10 @@ class SharingGroupsController extends Controller{
     
     /**
      * @NoAdminRequired
+     *
+     * Get sharing group by sharing group id
+     * @param int $id
+     * @return JSONResponse
      */
     public function fetch($id = '') {
         $result = $this->data->findGroupById($id, $this->user);
@@ -124,6 +166,9 @@ class SharingGroupsController extends Controller{
 
     /**
      * @NoAdminRequired
+     *
+     * Get all sharing group
+     * @return JSONResponse
      */
     public function fetchAll() {
         $result = $this->data->findAllGroup();
