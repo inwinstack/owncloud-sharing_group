@@ -6,6 +6,7 @@ var $groupList,
 var GroupList = {
 	everyoneGID: '_everyone',
     groups: [],
+    initgroup: $.Deferred(),
     group: $.Deferred(),
     groups_name: [],
 
@@ -42,23 +43,8 @@ var GroupList = {
                 UserList.update(gid);
             }
             else {
-                UserList.currentGid = gid; 
-                var usersInGroup = $('#group-list').data(gid);
-                var users = $('#user-list').data('users');
-                
-                $userList.siblings('.loading').css('visibility', 'hidden');
-                if(usersInGroup.length === 0) {
-                    UserList.addLabel();
-                }
-                else { 
-                    
-                    $.each(users, function(userId, userName) {
-                        if ($.inArray(userId, usersInGroup) != -1) {
-                            UserList.addLabel(userId, userName);
-                        }
-                    });
-                    UserList.sortUser();
-                }
+                UserList.currentGid = gid;
+                UserList.update(gid);
             }
         }
 	},
@@ -103,6 +89,18 @@ var GroupList = {
     editGroup: function($element) {
 		var oldname = $element.find('.group-name').text();
 		var gid = $element.data('gid');
+		var $editInput = $('<input type="text" />').val(oldname).attr({ id:'editInput'});
+        var button = $('<button>').attr({
+            class:'new-button primary icon-checkmark-white', 
+            style:'display: block', 
+            id:'rename-button'
+        });
+        var group_editing = $('<li>').attr({class:'group editing'});
+        
+        $element.hide();
+        $editInput.insertBefore($element).wrap(group_editing);
+        group_editing.append(button);
+        $('.group.editing').append(button);
 		var $editInput = $('<input type="text" />').val(oldname).attr({ id:'editInput'});
         var button = $('<button>').attr({
             class:'new-button primary icon-checkmark-white', 
@@ -242,7 +240,7 @@ var GroupList = {
 			OC.generateUrl('/apps/sharing_group/getAllGroupsInfo'),
 			function(result) {
                 if (gids == undefined) {
-                    GroupList.group.resolve(result);
+                    GroupList.initgroup.resolve(result);
                 }
                 else {
                     $.each(result.data, function(index, group) {
@@ -394,10 +392,6 @@ $(function() {
     // Display or hide of Create Group List Element
 	$('#newgroup-form').hide();
 	$('#newgroup-init').on('click', function(e) {
-        if(UserList.updating) { 
-	        return;
-        }
-
         GroupList.toggleAddGroup(e);
     });
     
@@ -437,9 +431,6 @@ $(function() {
 
 	// click on group name
 	$groupList.on('click', 'li.isgroup', function(event) {
-        if(UserList.updating) {
-            return;
-        }
         var group = $(this);
         if($(event.target).is('.action.delete')) {
 			var id = group.find('a').closest('li').data('gid');
@@ -552,5 +543,5 @@ $(function() {
             GroupList.showGroupList(data.result.gids);
         },
     });
-       
+
 });

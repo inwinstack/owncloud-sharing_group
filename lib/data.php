@@ -6,6 +6,7 @@ use OCP\User;
 use OCP\Util;
 
 class Data{
+    
     /**
      *  Add users to group or remove users from group
      *
@@ -483,6 +484,22 @@ class Data{
     }
     
     /**
+     *  get group user and group user's Display name by shraing group id
+     *  
+     *  @param int $id the sharing group id
+     *  @param int $limit
+     *  @param int $offset
+     *  @return function getGroupUsersInfoQueryResult
+     */
+    public static function getGroupUsersInfo($id, $limit = null, $offset = null) {
+        $sql = 'SELECT `*PREFIX*sharing_group_user`.`uid` , `*PREFIX*users`.`displayname` FROM `*PREFIX*sharing_group_user` INNER JOIN `*PREFIX*users` ON `*PREFIX*sharing_group_user`.`uid`=`*PREFIX*users`.`uid` WHERE `*PREFIX*sharing_group_user`.`gid` = ? ORDER BY `*PREFIX*sharing_group_user`.`uid` ASC';
+        $query = DB::prepare($sql,$limit,$offset);
+        $result = $query->execute(array($id));
+        
+        return self::getGroupUsersInfoQueryResult($result); 
+    }
+
+    /**
      *  get group user by shraing group id
      *  
      *  @param int $id the sharing group id
@@ -590,6 +607,28 @@ class Data{
         return $data;
     }
     
+    /**
+     *  Process the result and return the sharing group user and user's DisplayName
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|null
+     */
+    private static function getGroupUsersInfoQueryResult($result) {
+        $data = [];
+
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+
+            return;
+        }
+
+        while($row = $result->fetch()) {
+            $data[$row['uid']] = $row['displayname'];
+        }
+        natcasesort($data);
+        return $data;
+    }
+
     /**
      *  Process the result and return the sharing group user
      *  

@@ -29,7 +29,9 @@
     "None" : "清空",
     "Inverse": "反選",
     "export": "匯出",
-    "import": "匯入"
-    
+    "import": "匯入",
+    "Has been shown": "已顯示",
+    "Load one hundred of users": "載入 100 個使用者",
+    "Load all users": "載入全部使用者"
 },"pluralForm" :"nplurals=1; plural=0;"
 }

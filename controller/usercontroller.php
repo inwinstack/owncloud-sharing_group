@@ -26,6 +26,7 @@ use OCP\IUserSession;
 use OCP\Mail\IMailer;
 use OCA\Sharing_Group\Data;
 use OCP\User;
+ 
 
 
 class UserController extends UsersController {
@@ -110,7 +111,7 @@ class UserController extends UsersController {
      *
      * TODO: Tidy up and write unit tests - code is mainly static method calls
      */
-    public function index($offset = 0, $limit = 10, $gid = '', $pattern = '', $backend = '') {
+    public function index($offset = 0, $limit = 100, $gid = '', $pattern = '', $backend = '') {
         // FIXME: The JS sends the group '_everyone' instead of no GID for the "all users" group.
         if($gid === '_everyone') {
             $gid = '';
@@ -128,14 +129,23 @@ class UserController extends UsersController {
                 }
             }
         }
-
-        //$users = ($gid !== '') ? Data::readGroupUsers($gid) : Data::readAllUsers();
-        $users = \OCP\User::getDisplayNames();
-        ksort($users,SORT_NATURAL | SORT_FLAG_CASE);   
-
-        $users = array_diff($users, array(User::getUser())); 
-        $users = array_slice($users, 0);
-
-        return new DataResponse(array('data'=>$users, 'status'=>'success'));
+        if($gid =='') {
+            $userObject = $this->userManager->searchDisplayName($pattern,$limit,$offset);
+            $users = array();
+            $length = sizeof($userObject);
+            for($i = 0; $i < $length; $i++) {
+                $userID = $userObject[$i]->getUID();
+                $users[$userID] = $userObject[$i]->getDisplayName();
+            }
+            
+            ksort($users,SORT_NATURAL | SORT_FLAG_CASE);   
+            $users = array_diff($users, array(User::getUser())); 
+            $users = array_slice($users, 0);
+        }
+        else {
+            $users = Data::getGroupUsersInfo($gid, $limit, $offset);
+        }
+        
+        return new DataResponse(array('data'=>$users, 'length'=>sizeof($users), 'status'=>'success'));
     }
 }

@@ -37,5 +37,17 @@
                 </div>
             </div>
         </div> 
+        <div class="user-listed">
+            <span> <?php  p($l->t('Has been shown'))?></span>
+            <span class="users-offset"></span>
+            <span> / </span>
+            <span class="all-users-count"></span>
+            <button type="button" class="load-part-users">
+                <?php p($l->t('Load one hundred of users'))?>
+            </button>
+            <button type="button" class="load-all-users">
+                <?php p($l->t('Load all users'))?>
+            </button>
+        </div>
     </div>
 </div>

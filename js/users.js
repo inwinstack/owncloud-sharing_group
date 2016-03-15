@@ -2,14 +2,15 @@ var $userList,
     $userListUl,
     filter,
     appname = 'sharing_group';
-    uid = [];
 
 var UserList = {
 	availableGroups: [],
 	offset: 0,
+    length: 0,
     user: $.Deferred(),
-	usersToLoad: 10, //So many users will be loaded when user scrolls down
+	usersToLoad: 100,
 	currentGid: '',
+    uid: [],
 
 	preSortSearchString: function(a, b) {
 		var pattern = filter.getPattern();
@@ -95,22 +96,14 @@ var UserList = {
 		return aa.length - bb.length;
 	},
     
-	checkUsersToLoad: function() {
-		//30 shall be loaded initially, from then on always 10 upon scrolling
-		if(UserList.isEmpty === false) {
-			UserList.usersToLoad = 10;
-		} else {
-			UserList.usersToLoad = 30;
-		}
-	},
-   
     empty: function() {
 		//one row needs to be kept, because it is cloned to add new rows
 		$userList.find('label').remove();
-        UserList.isEmpty = true;
+        UserList.uid = [];
 		UserList.offset = 0;
-		UserList.checkUsersToLoad();
+        UserList.length = 0;
 	},
+    
     compareDifference :function(array1, array2) {
         var difference = [];
         difference = $.grep(array1, function(el) {
@@ -172,7 +165,6 @@ var UserList = {
             }
         }
     },
-
     
     addLabel: function(userId, userName) {
         if(userId != undefined) {
@@ -225,15 +217,25 @@ var UserList = {
         });
         UserList.checktristate();
     },
-
-    append: function(users, limit) {
+    
+    quantity: function(offset, limit){
+        $('.users-offset').text(offset);
+        $('.all-users-count').text(limit);
+    },
+    
+    append: function(users, limit, gid) {
         if(!limit) {
 			limit = UserList.usersToLoad;
 		}
         $.each(users.data, function (userId, userName) {
+            if(userName == null) {
+                userName = userId;
+            }
             UserList.addLabel(userId,userName);
         });
-        
+        if($('#checkuser').data('user').length == 0) {
+            UserList.addLabel();
+        }
         if (users.length > 0) {
             $userList.siblings('.loading').css('visibility', 'hidden');
             // reset state on load
@@ -244,27 +246,33 @@ var UserList = {
             $userList.siblings('.loading').css('visibility', 'hidden');
         }
         UserList.offset += limit;
+        UserList.length += users.length;
+        if(gid == '_everyone') {
+            UserList.quantity(UserList.length, $('#everyone-count').text());
+        }
+        else {
+            UserList.quantity(UserList.length, $('#group-list').data(gid).length);
+        }
     },
     
     init: function (users) {
         var userid = Object.keys(users.data);
+        UserList.uid = UserList.uid.concat(userid);
+        
         $('#checkuser').data({
-            'user': userid,
+            'user': UserList.uid,
             'checkeduser':[] ,
             'different': [],
             'origin': 'unchecked',
         });
-        $('#user-list').data('users',users.data);
+        //$('#user-list').data('users',users.data);
     },
+    
     update: function (gid, limit) {
-		if (UserList.updating) {
-			return;
-		}
         if(!limit) {
 			limit = UserList.usersToLoad;
 		}
 		$userList.siblings('.loading').css('visibility', 'visible');
-		UserList.updating = true;
 		if(gid === undefined) {
 			gid = '_everyone';
 		}
@@ -279,17 +287,18 @@ var UserList = {
                 pattern: pattern 
             },
 			function (users) {
-                if(UserList.currentGid != '_everyone') {
+                if(UserList.currentGid == '') {
                     UserList.user.resolve(users);
 					$userList.siblings('.loading').css('visibility', 'hidden');
                     return;
                 }
-                UserList.init(users);
-                UserList.append(users, limit);
-            }).always(function() {
-				UserList.updating = false;
+                if(UserList.currentGid == gid) {
+                    UserList.init(users);
+                    UserList.append(users, limit, gid);
+                }
 			});
     },
+    
 };
 
 $(function () {
@@ -300,18 +309,7 @@ $(function () {
     
 	$userList.after($('<div class="loading" style="height: 200px; visibility: hidden;"></div>'));
     // calculate initial limit of users to load
-	var initialUserCountLimit = 20;
-	var	containerHeight = $('#app-content').height();
-	
-    if (containerHeight > 40) {
-		initialUserCountLimit = Math.floor(containerHeight / 40);
-		while((initialUserCountLimit % UserList.usersToLoad) !== 0) {
-			// must be a multiple of this, otherwise LDAP freaks out.
-			// FIXME: solve this in LDAP backend in  8.1
-			initialUserCountLimit = initialUserCountLimit + 1;
-		}
-	}
-    
+	var initialUserCountLimit = 100;
     $userList.delegate('input:checkbox', 'click' , function() {
         var checkboxForUser = $(this);
         //var name = checkboxForUser.closest('label').find('span').text();
@@ -366,7 +364,6 @@ $(function () {
         }
     });
 
-
     $('#check-all').click(function() {
         UserList.checkAll();
         $('.sg-dropdown-menu').attr({hidden:true});
@@ -400,11 +397,27 @@ $(function () {
         UserList.checktristate();
         $('.sg-dropdown-menu').attr({hidden:true});
     });
-   
-    // trigger loading of users on startup
-	UserList.update(UserList.currentGid, initialUserCountLimit);
-    $.when(UserList.user, GroupList.group).done(function (users, groups){
+    
+    $('.load-part-users').click(function() {
+	    if(!!UserList.noMoreEntries) {
+            return;
+        }
+        UserList.update(UserList.currentGid, initialUserCountLimit);
+    });
+
+    $('.load-all-users').click(function() {
         
+        if(!!UserList.noMoreEntries) {
+            return;
+        }
+        UserList.update(UserList.currentGid, parseInt($('#everyone-count').text()));
+    });
+
+    // trigger loading of users on startup
+    UserList.update(UserList.currentGid, initialUserCountLimit);
+    
+    // the first loading
+    $.when(UserList.user, GroupList.initgroup).done(function (users, groups){
 	    $GroupListLi.siblings('.loading').remove();
         $.each(groups.data, function(index, group) {
             GroupList.groups.push(group.id);
@@ -413,10 +426,13 @@ $(function () {
             $GroupListLi.after(GroupList.addLi(group.id, group.name, group.count, group.user));
             GroupList.sortGroups();
         });
+        
         UserList.init(users);
 
         if(UserList.currentGid == '') {
-            UserList.append(users);
+            UserList.currentGid = '_everyone';
+            UserList.append(users, UserList.usersToLoad, UserList.currentGid);
         }
     });
+    
 });

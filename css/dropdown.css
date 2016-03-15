@@ -5,6 +5,11 @@
     padding: 4px;
 }
 
+/* user-load */
+.user-listed{
+    display: inline-block;
+}
+
 /* dropdown */
 .sg-dropdown{
     display: inline-block;

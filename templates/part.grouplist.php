@@ -2,7 +2,7 @@
     /** @var $_ array*/
 ?>
 
-<ul id="group-list" data-sort-groups="<?php //p($_['sortGroups']); ?>">
+<ul id="group-list" data-sort-groups="">
 	<!-- Add new group -->
 	<li id="newgroup-init">
 		<a href="#">
@@ -18,14 +18,10 @@
 	<!-- Everyone -->
 	<li id="everyone-group" data-gid="_everyone" data-usercount="" class="isgroup">
 		<a href="#">
-			<span class="group-name">
-				<?php p($l->t('Everyone')); ?>
-			</span>
+			<span class="group-name"><?php p($l->t('Everyone')); ?></span>
 		</a>
 		<span class="utils">
-			<span class="user-count" id="everyone-count">
-                <?php  p($_['everyone']) ?>
-			</span>
+			<span class="user-count" id="everyone-count"><?php  p($_['everyone']) ?></span>
 		</span>
 	</li>
 </ul>

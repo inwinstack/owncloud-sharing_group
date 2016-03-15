@@ -34,6 +34,7 @@ class PageController extends Controller {
      */
     public function index() {
         $params = ['everyone' => Data::countAllUsers()];
+        
         return new TemplateResponse('sharing_group', 'main', $params);  // templates/main.php
     }
 }
