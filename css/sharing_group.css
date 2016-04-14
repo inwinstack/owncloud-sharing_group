@@ -7,3 +7,113 @@ li .ui-status-error {
 .group .ui-status-error {
     border:1px solid #FF0000;
 }
+
+/* toolbar  */
+.sg-toolbar{
+    display: inline-block;
+    float: left;
+    padding: 4px;
+}
+
+/* user-load */
+.user-listed{
+    display: inline-block;
+    padding: 0 10px;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+/* checkbox card */
+.checkbox-card{
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 1px 5px #eee;
+    color: #666;
+    cursor: pointer;
+    display: inline-block;
+    margin: 5px;
+    padding: 5px 8px;
+    width: 200px;
+}
+
+.checkbox-card:hover{
+    background: #eee;
+}
+
+.checkbox-card.checked{
+    border-color: #1d88cc;
+    transition: border-color .25s ease;
+}
+
+.checkbox-card input[type="checkbox"]{
+    vertical-align: middle;
+}
+
+.checkbox-card span{
+    margin-left: 5px;
+}
+
+/**/
+.checkbox-card {
+  width: 200px;
+}
+
+.sg-user,
+.checkbox-card {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 1px 5px #eee;
+  color: #666;
+  cursor: pointer;
+  display: inline-block;
+  margin: 5px;
+  padding: 5px;
+}
+
+.sg-user {
+  width: 250px;
+  position: relative;
+}
+
+.sg-user.checked {
+  border: 1px solid #00BCD4;
+}
+
+.sg-icon {
+  float: left;
+  margin: 8px 10px 5px 5px;
+}
+
+.sg-icon img{
+    position: absolute;
+    left: 10px;
+}
+
+.sg-checkbox {
+  display: none;
+}
+
+.sg-info .sg-username {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  width: 180px;
+  background: transparent;
+  height: 25px;
+  padding: 5px 0 5px 5px;
+}
+
+.sg-info span {
+    display: block;
+    font-size: 12px;
+    color: #999;
+    padding-left: 55px;
+}
+
+.sg-username:hover{
+  border: 1px solid #999;
+}
+
+input[type="text"].sg-username:focus {
+    border: 1px solid #999;
+}
