@@ -130,17 +130,22 @@ class UserController extends UsersController {
             }
         }
         if($gid =='') {
-            $userObject = $this->userManager->searchDisplayName($pattern,$limit,$offset);
-            $users = array();
-            $length = sizeof($userObject);
-            for($i = 0; $i < $length; $i++) {
-                $userID = $userObject[$i]->getUID();
-                $users[$userID] = $userObject[$i]->getDisplayName();
+            if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode') {
+                $users = Data::getAllFriends($limit,$offset);
             }
-            
-            ksort($users,SORT_NATURAL | SORT_FLAG_CASE);   
-            $users = array_diff($users, array(User::getUser())); 
-            $users = array_slice($users, 0);
+            else {
+                $userObject = $this->userManager->searchDisplayName($pattern,$limit,$offset);
+                $users = array();
+                $length = sizeof($userObject);
+                for($i = 0; $i < $length; $i++) {
+                    $userID = $userObject[$i]->getUID();
+                    $users[$userID] = $userObject[$i]->getDisplayName();
+                }
+                
+                ksort($users,SORT_NATURAL | SORT_FLAG_CASE);   
+                $users = array_diff($users, array(User::getUser())); 
+                $users = array_slice($users, 0);
+            }
         }
         else {
             $users = Data::getGroupUsersInfo($gid, $limit, $offset);
@@ -148,4 +153,135 @@ class UserController extends UsersController {
         
         return new DataResponse(array('data'=>$users, 'length'=>sizeof($users), 'status'=>'success'));
     }
+    
+    /**
+     * @NoAdminRequired
+     * 
+     * Add user to current user's friend list 
+     *
+     * @param string $uid
+     * @param string $nickname
+     * @return DataResponse
+     */
+    public function addFriend($uid, $nickname = '') {
+        $currentUser = User::getUser();
+        $user = []; 
+        $userObject = $this->userManager->get($uid);
+        
+        if($uid == $currentUser) {
+            
+            return new DataResponse(array('message'=>"Do you think you can add yourself?" ,'status'=> 'error'));
+        }
+        
+        if(!isset($userObject)) {
+            
+            return new DataResponse(array('message'=>"The user does not exist." ,'status'=> 'error'));
+        }
+        
+        if($nickname == '') {
+            $nickname = $userObject->getDisplayName();
+            $nickname = mb_substr($nickname,1,NULL,"UTF-8");
+        }
+        
+        if(!Data::checkUserExist($uid)) {
+            $status = Data::addUserToFriend($uid,$nickname);
+            if($status == 'success') {
+                $user[$uid] =  $nickname;   
+            }
+        
+            return new DataResponse(array('data'=>$user,'status'=> $status));
+        }
+        
+        return new DataResponse(array('message'=>"This user already existed in your friend list." ,'status'=> 'error'));
+       
+    }
+
+    /**
+     * @NoAdminRequired
+     * 
+     * Rename the user's nickname
+     *
+     * @param string $userid
+     * @param string $nickname
+     * @return DataResponse
+     */
+    public function renameNickname($userid , $nickname) {
+        $status = Data::renameNickname($userid, $nickname);
+
+        return new DataResponse(array('status'=>$status));
+    }
+
+    /**
+     * @NoAdminRequired
+     * 
+     * Delete friends 
+     *
+     * @param string $users
+     * @return DataResponse
+     */
+    public function deleteFriends($users) {
+        $user = [];
+        $user = explode(",",$users);
+        $status = Data::deleteUsersFromFriend($user);
+
+        return new DataResponse(array('status'=>$status));
+    }
+    
+    /**
+     * @NoAdminRequired
+     * 
+     * count current user's friends  
+     *
+     * @return DataResponse
+     */
+    public function countFriends() {
+        $length = Data::countAllUsers();
+
+        return new DataResponse(array('length'=>$length,'status'=>'success'));
+    }
+
+    /**
+     * @NoAdminRequired
+     * 
+     * Get current user's friend list 
+     *
+     * @param int $offset
+     * @param int $limit
+     * @return DataResponse
+     */
+    public function getFriendList($offset = 0, $limit = 100) {
+        $users = Data::getAllFriends($limit,$offset);
+
+        return new DataResponse(array('data'=>$users, 'length'=>sizeof($users),'status'=>'success'));
+    }
+    
+    /**
+     * @NoAdminRequired
+     * 
+     * get a user by user id 
+     * 
+     * @param string $uid
+     * @return DataResponse
+     */
+    public function getUserByUID($userID = '') {
+        $currentUser = User::getUser();
+        $user = [];
+        $userObject = $this->userManager->get($userID);
+        
+        if($userID == $currentUser) {
+            
+            return new DataResponse(array('message'=>"The user does not exist." ,'status'=> 'error'));
+        }
+
+        if(!isset($userObject)) {
+            
+            return new DataResponse(array('message'=>"The user does not exist." ,'status'=> 'error'));
+        }
+        $userDisplayName = $userObject->getDisplayName();
+        $userDisplayName = "○" . mb_substr($userDisplayName,1,NULL,"UTF-8");
+        $user[$userObject->getUID()] = $userDisplayName;
+
+        return new DataResponse(array('data'=> $user, 'status'=>'success'));
+    }
+
 }

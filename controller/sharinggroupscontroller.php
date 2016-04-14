@@ -102,9 +102,15 @@ class SharingGroupsController extends Controller{
      * @return DataResponse
      */
     public function importGroup($data) {
-        $files = $this->request->getUploadedFile('fileToUpload'); 
-        $gids = $this->data->importGroup($files);
-
+        
+        if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode') {
+            $gids = $this->data->importGroup($data);
+        }
+        else {
+            $files = $this->request->getUploadedFile('fileToUpload'); 
+            $gids = $this->data->importGroup($files);
+        }
+        
         return new DataResponse(['gids' => $gids, 'status' => 'success'],Http::STATUS_OK);
     } 
     
@@ -118,9 +124,18 @@ class SharingGroupsController extends Controller{
     public function export() {
         $data = $this->data->export();
         $fileName = User::getUser() . ".csv";
-        $Download = new DataDownloadResponse($data , $fileName, 'text/csv');
+        $config = \OC::$server->getSystemConfig(); 
+
+        if($config->getValue('sharing_group_mode') == 'Friend_mode') {
+            \OC\Files\Filesystem::file_put_contents('/'.$fileName, $data);
         
-        return $Download;
+            return new DataResponse(array('status' => 'success'));
+        }
+        else {
+            $Download = new DataDownloadResponse($data , $fileName, 'text/csv');
+        
+            return $Download;
+        }
     }
     
     /**
