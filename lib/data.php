@@ -1,11 +1,198 @@
 <?php
 namespace OCA\Sharing_Group;
 
+use OC\Files\Filesystem;
 use OCP\DB;
 use OCP\User;
 use OCP\Util;
 
 class Data{
+    
+    /**
+     * check the user exist in the friend list or not.
+     * 
+     * @param string $uid
+     * @return true|false
+     */
+    public static function checkUserExist($uid) {
+        $user = User::getUser();
+        $sql = 'SELECT * FROM `*PREFIX*sharing_group_friend` WHERE `uid` = ? AND `owner` = ?';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($uid ,$user));
+        $row = $result->fetchRow();
+        if(!$row) {
+            
+            return false;
+        }
+
+        return true;
+    }
+    
+    /**
+     * read all user in the friend list.
+     * 
+     * @return function getUsersFriendQueryResult
+     */
+    public static function readUsersFriends() {
+        $user = User::getUser();
+        $sql = 'SELECT * FROM `*PREFIX*sharing_group_friend` WHERE `owner` = ?';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($user));
+        
+        return self::getUsersFriendQueryResult($result);
+    }
+
+    /**
+     * delete users from friend list
+     *
+     * @param array $uids
+     * @return success|error
+     */
+    public static function deleteUsersFromFriend($uids) {
+        $user = User::getUser();
+        $sql = 'DELETE FROM `*PREFIX*sharing_group_friend` WHERE `owner` = ? AND (`uid` = ?';
+        for($i = 1 ; $i < count($uids); $i++) {
+            $sql .= 'OR `uid` = ?';
+        }
+        $sql .= ')';
+        $query = DB::prepare($sql);
+        $params = array($user);
+        $params = array_merge($params,$uids);
+        $result = $query->execute($params);
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
+        
+        \OCP\Util::emitHook('OCA\Sharing_group', 'post_delete', $uids);
+        return 'success';
+    }
+    
+    /**
+     * add users to friend list
+     *
+     * @param array $uids 
+     * @return success|error
+     */
+    public static function addUsersToFriend($uids) {
+        $user = User::getUser();
+        $sql = 'INSERT INTO `*PREFIX*sharing_group_friend`(`owner`, `uid`, `nickname`) VALUES';
+        $sqlarr = [];
+        $checkuid = self::readUsersFriends();
+        $nicknames = self::getUidsDisplayname($uids);
+        foreach($uids as $uid) {
+            if(in_array($uid,$checkuid)) {
+                continue;
+            }
+            if(!$nicknames[$uid]) {
+                $nickname = mb_substr($uid,1,NULL,"UTF-8");
+            }
+            else {
+                $nickname = mb_substr($nicknames[$uid],1,NUll,"UTF-8");
+            }
+            $sql .='(?, ? , ?) ,';
+            array_push($sqlarr, $user, $uid, $nickname); 
+        }
+        if(!empty($sqlarr)) {
+            $sql = substr($sql,0,-1);
+            $query = DB::prepare($sql);
+            $result = $query->execute($sqlarr);
+        }   
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
+
+        return 'success';
+    }
+
+    /**
+     * add the user to friend list
+     *
+     * @param string $uid
+     * @param string $nickname
+     * @return success|error
+     */
+    public static function addUserToFriend($uid, $nickname) {
+        $user = User::getUser();
+        $sql = 'INSERT INTO `*PREFIX*sharing_group_friend`(`owner`, `uid`, `nickname`) VALUES (?,?,?)';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($user, $uid, $nickname));
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
+
+        return 'success';
+    }
+
+    /**
+     * get all friends
+     *
+     * @param int $limit
+     * @param int $offset
+     * @return function getFriendsListQueryResult 
+     */
+    public static function getAllFriends($limit,$offset) {
+        $user = User::getUser(); 
+        $sql = 'SELECT `uid`,`nickname` FROM `*PREFIX*sharing_group_friend` WHERE `owner` = ?';
+        $query = DB::prepare($sql,$limit,$offset);
+        $result = $query->execute(array($user));
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
+
+        return self::getFriendsListQueryResult($result);
+    }
+    
+    /**
+     * get uids's displayname
+     *
+     * @param array $uids
+     * @return function getDisplayNameQueryResult
+     */
+    public static function getUidsDisplayname($uids) {
+        $user = User::getUser(); 
+        $sql = 'SELECT `uid`,`displayname` FROM `*PREFIX*users` WHERE `uid` = ?';
+        for($i = 1 ; $i < sizeof($uids); $i++) {
+            $sql .= 'OR `uid` = ?';
+        }
+        $query = DB::prepare($sql);
+        $result = $query->execute($uids);
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
+
+        return self::getDisplayNameQueryResult($result);
+    }
+
+    /**
+     * rename nickname 
+     *
+     * @param String $nickname
+     * @param String $uid
+     * @return success|error
+     */
+    public static function renameNickname($uid, $nickname) {
+        $user = User::getUser();
+        $sql = 'UPDATE `*PREFIX*sharing_group_friend` SET `nickname` = ? WHERE `owner` = ? AND `uid` = ?';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($nickname,$user,$uid));
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
+
+        return 'success';
+    }
     
     /**
      *  Add users to group or remove users from group
@@ -95,14 +282,22 @@ class Data{
     }
 
     /**
-     *  remove user from group
+     *  remove users from group
      *
-     *  @param String $uid the username
+     *  @param array $uids 
      *  @return success|error
      */
-    public static function removeUserFromGroup($uid) {
-        $query = DB::prepare('DELETE FROM `*PREFIX*sharing_group_user` WHERE `uid`= ?');
-        $result = $query->execute(array($uid));
+    public static function removeUserFromGroup($uids) {
+        $user = User::getUser();
+        $sql = 'DELETE FROM `*PREFIX*sharing_group_user` WHERE `owner` = ? AND (`uid` = ?';
+        for($i = 1 ; $i < count($uids); $i++) {
+            $sql .= 'OR `uid` = ?';
+        }
+        $sql .= ')';
+        $query = DB::prepare($sql);
+        $params = array($user);
+        $params = array_merge($params,$uids);
+        $result = $query->execute($params);
         
         if(DB::isError($result) ) {
 			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
@@ -112,7 +307,7 @@ class Data{
 
         return 'success';
     }
-    
+
     /**
      *  Remove sharing group's user when Owner has been deleted
      *
@@ -309,6 +504,7 @@ class Data{
                     array_push($gids,$gid);
                 }
                 if (array_key_exists('uid', $importdata[$i])) {
+                    self::addUsersToFriend($importdata[$i]['uid']);
                     self::addUserToGroup($gid, $importdata[$i]['uid']);
                 }
              }
@@ -381,10 +577,10 @@ class Data{
         }
         while ($row = $result->fetchRow()) {
             if($row['uid'] != NULL){
-                $string .= '"' . $row['id'] . '", "' . $row['name'] . '", "' . $row['uid'] . '"' . "\n" ;
+                $string .= $row['id'] . ',' . $row['name'] . ',' . $row['uid'] . "\n" ;
             }
             else {
-                $string .= '"' . $row['id'] . '", "' . $row['name'] . '",' . "\n" ;
+                $string .= $row['id'] . ',' . $row['name'] . ',' . "\n" ;
             }
         }
         
@@ -463,10 +659,19 @@ class Data{
      *  @return function getEveryoneCountQueryResult
      */
     public static function countAllUsers() {
-        $sql = 'SELECT COUNT(uid) FROM `*PREFIX*users`';
-        $query = DB::prepare($sql);
-        $result = $query->execute();
-        
+        $user = User::getUser();
+
+        if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode') {
+            $sql = 'SELECT COUNT(uid) FROM `*PREFIX*sharing_group_friend` WHERE `owner` = ?';
+            $query = DB::prepare($sql);
+            $result = $query->execute(array($user));
+        }    
+        else {
+            $sql = 'SELECT COUNT(uid) FROM `*PREFIX*users`';
+            $query = DB::prepare($sql);
+            $result = $query->execute();
+        }
+                
         return self::getEveryoneCountQueryResult($result); 
     }
     
@@ -492,7 +697,12 @@ class Data{
      *  @return function getGroupUsersInfoQueryResult
      */
     public static function getGroupUsersInfo($id, $limit = null, $offset = null) {
-        $sql = 'SELECT `*PREFIX*sharing_group_user`.`uid` , `*PREFIX*users`.`displayname` FROM `*PREFIX*sharing_group_user` INNER JOIN `*PREFIX*users` ON `*PREFIX*sharing_group_user`.`uid`=`*PREFIX*users`.`uid` WHERE `*PREFIX*sharing_group_user`.`gid` = ? ORDER BY `*PREFIX*sharing_group_user`.`uid` ASC';
+        if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode') {
+            $sql = 'SELECT `*PREFIX*sharing_group_user`.`uid` , `*PREFIX*sharing_group_friend`.`nickname` FROM `*PREFIX*sharing_group_user` INNER JOIN `*PREFIX*sharing_group_friend` ON `*PREFIX*sharing_group_user`.`uid`=`*PREFIX*sharing_group_friend`.`uid` WHERE `*PREFIX*sharing_group_user`.`gid` = ? ORDER BY `*PREFIX*sharing_group_user`.`uid` ASC';
+        }
+        else {
+            $sql = 'SELECT `*PREFIX*sharing_group_user`.`uid` , `*PREFIX*users`.`displayname` FROM `*PREFIX*sharing_group_user` INNER JOIN `*PREFIX*users` ON `*PREFIX*sharing_group_user`.`uid`=`*PREFIX*users`.`uid` WHERE `*PREFIX*sharing_group_user`.`gid` = ? ORDER BY `*PREFIX*sharing_group_user`.`uid` ASC';
+        }
         $query = DB::prepare($sql,$limit,$offset);
         $result = $query->execute(array($id));
         
@@ -623,7 +833,12 @@ class Data{
         }
 
         while($row = $result->fetch()) {
-            $data[$row['uid']] = $row['displayname'];
+            if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode') {
+                $data[$row['uid']] = $row['nickname'];
+            }
+            else {
+                $data[$row['uid']] = $row['displayname'];
+            }
         }
         natcasesort($data);
         return $data;
@@ -651,6 +866,48 @@ class Data{
         return $data;
     }
     
+    /**
+     *  Process the result and return the key(user id) and the value(user displayname)
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|null
+     */
+    private static function getDisplayNameQueryResult($result) {
+        $data = [];
+
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+
+            return;
+        }
+        while($row = $result->fetch()) {
+            $data[$row['uid']] = $row['displayname'];
+        }
+        
+        return $data;
+    }
+ 
+    /**
+     *  Process the result and return the sharing group friend id
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|null
+     */
+    private static function getUsersFriendQueryResult($result) {
+        $data = [];
+
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+
+            return;
+        }
+        while($row = $result->fetch()) {
+            $data[] = $row['uid'];
+        }
+
+        return $data;
+    }
+ 
     /**
      *  Process the result and return the sharing group id
      *  
@@ -713,11 +970,41 @@ class Data{
         }
 
         while ($row = $result->fetchRow()) {
-            $data = $row['COUNT(uid)'] - 1 ;     
+            
+            if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode') {
+                $data = $row['COUNT(uid)'];
+            }
+            else {
+                $data = $row['COUNT(uid)'] - 1 ;
+            }
         }
+
         return $data;
     }
     
+    /**
+     *  Process the result and return the sharing group friends list
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array|null
+     */
+    private static function getFriendsListQueryResult($result) {
+        $data = [];
+
+        if (DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return;
+        } 
+
+        while ($row = $result->fetchRow()) {
+            $friends = array($row['uid'] => $row['nickname']);
+            
+            $data = array_merge($data, $friends);
+        }
+        return $data;
+    }    
+
     /**
      *  Process the result and return the sharing group id
      *  
@@ -750,7 +1037,14 @@ class Data{
     private static function importDataHanlder($files) {
         $result = [];
         $users = self::readAllUsers(); 
-        $handle = fopen($files['tmp_name'],"r");
+
+        if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode') {
+            $handle = Filesystem::fopen($files,"r");
+        }
+        else {
+            $handle = fopen($files['tmp_name'],"r");
+        }
+        
         while(($data = fgetcsv($handle, 0, ",")) !== FALSE) {
             
             $temp = []; 
