@@ -26,6 +26,12 @@ $application->registerRoutes($this,[
     'routes' => [
 	   ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 	   ['name' => 'user#index', 'url' => '/user', 'verb' => 'GET'],
+	   ['name' => 'user#getFriendList', 'url' => '/getFriendList', 'verb' => 'GET'],
+	   ['name' => 'user#countFriends', 'url' => '/countFriends', 'verb' => 'GET'],
+	   ['name' => 'user#addFriend', 'url' => '/addFriend', 'verb' => 'GET'],
+	   ['name' => 'user#deleteFriends', 'url' => '/deleteFriends', 'verb' => 'GET'],
+	   ['name' => 'user#renameNickname', 'url' => '/rename', 'verb' => 'GET'],
+	   ['name' => 'user#getUserByUID', 'url' => '/getUser', 'verb' => 'GET'],
 	   ['name' => 'SharingGroups#fetch', 'url' => '/fetch', 'verb' => 'GET'],
 	   ['name' => 'SharingGroups#fetchAll', 'url' => '/fetchAll', 'verb' => 'GET'],
 	   ['name' => 'SharingGroups#getAllGroupsInfo', 'url' => '/getAllGroupsInfo', 'verb' => 'GET'],
