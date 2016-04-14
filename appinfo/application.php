@@ -55,7 +55,6 @@ class Application extends App {
 			);
 		});
 
-
         $container->registerService('GroupData', function(IContainer $c) {
 			return new Data();
 		});
@@ -160,7 +159,6 @@ class Application extends App {
 		$container->registerService('IAppManager', function(IContainer $c) {
 			return $c->query('ServerContainer')->getAppManager();
 		});
-
 
     }
 }

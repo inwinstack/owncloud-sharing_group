@@ -18,6 +18,8 @@ $container = $app->getContainer();
 
 $container->query('UserHooks')->register();
 
+\OCP\Util::connectHook('OCA\Sharing_group','post_delete','OCA\Sharing_group\Data','removeUserFromGroup');
+
 $container->query('OCP\INavigationManager')->add(function () use ($container) {
 	$urlGenerator = $container->query('OCP\IURLGenerator');
 	$l10n = \OC::$server->getL10N('sharing_group');
