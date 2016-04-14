@@ -998,10 +998,9 @@ class Data{
         } 
 
         while ($row = $result->fetchRow()) {
-            $friends = array($row['uid'] => $row['nickname']);
-            
-            $data = array_merge($data, $friends);
+            $data[$row['uid']]= $row['nickname'];
         }
+        
         return $data;
     }    
 
