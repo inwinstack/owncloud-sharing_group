@@ -1,8 +1,19 @@
 <?php
+$config = \OC::$server->getSystemConfig(); 
 
+if($config->getValue('sharing_group_mode') == 'Friend_mode') {
+     script('sharing_group', [
+        'friends',
+        'friendGroup'
+    ]);
+}
+else {
+    script('sharing_group', [
+        'users',
+        'groups'
+    ]);
+}
 script('sharing_group', [
-    'users',
-    'groups',
     'filter',
     'jquery.tristate'
 ]);

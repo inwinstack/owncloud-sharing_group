@@ -1,6 +1,6 @@
 <div id="controls">
     <div class="sg-toolbar">
-        <div class="sg-dropdown">
+        <div class="sg-dropdown" id="sg-dropdown-checkuser">
             <div type="button" class="sg-dropdown-toggle" id="toggle-checkbox">
                 <input type="checkbox" class="icon" id="checkuser">
                 <span class="caret" id="caret-checkbox"></span>
@@ -28,26 +28,59 @@
                 <div class="sg-dropdown-footer">
                     <div class="btn-group btn-group-justified">
                         <div type="button" class="btn-flat" id="cancel">
-                            <?php p($l->t('CANCEL'))?>
+                            <?php p($l->t('Cancel'))?>
                         </div>
                         <div type="button" class="btn-flat" id="multi-group-select">
-                            <?php p($l->t('APPLY'))?>
+                            <?php p($l->t('Add'))?>
                         </div>
                     </div>
                 </div>
             </div>
-        </div> 
+        </div>
+
         <div class="user-listed">
+            <?php if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode'){ ?>
+                <button type="button" id="sg-addfriend">
+                    <?php p($l->t('Add friends'))?>
+                </button>
+                <button type="button" id="sg-deletefriend" disabled="disabled">
+                    <?php p($l->t('Delete friends'))?>
+                </button>
+
+                <div id="sg-dialog" title="<?php p($l->t('Add friends')) ?>">
+                    <form class="sg-searchbox" action="" method="GET">
+                        <input id="sg-friend-searchbox" placeholder="test@email.com" type="search" tabindex="5">
+                        <input type="submit" class="sg-searchbox-submit" value="<?php p($l->t('Search')) ?>">
+                    </form>
+                    <span class='sg-friend-name'></span>
+                </div>
+            <?php } ?>
+            
+
+            <div class="sg-dropdown hidden" id="sg-dropdown-load">
+                <div type="button" class="sg-dropdown-toggle" id="toggle-load">
+                    <span><?php p($l->t('Load'))?></span>
+                    <span class="caret" id="caret-load"></span>
+                </div>
+                <ul class="sg-dropdown-menu load" hidden=true>
+                    <li class="load-part-users"><a href="#" id="check-all"><?php p($l->t('Load next 100 users'))?></a></li>
+                    <li class="load-all-users"><a href="#" id="clear-all"><?php p($l->t('Load all users'))?></a></li>
+                </ul>
+            </div>
+
+
+            <button type="button" class="load-part-users hidden">
+                <?php p($l->t('Load next 100 users'))?>
+            </button>
+
+            <button type="button" class="load-all-users hidden">
+                <?php p($l->t('Load all users'))?>
+            </button>
+
             <span> <?php  p($l->t('Has been shown'))?></span>
             <span class="users-offset"></span>
             <span> / </span>
             <span class="all-users-count"></span>
-            <button type="button" class="load-part-users">
-                <?php p($l->t('Load one hundred of users'))?>
-            </button>
-            <button type="button" class="load-all-users">
-                <?php p($l->t('Load all users'))?>
-            </button>
         </div>
     </div>
 </div>

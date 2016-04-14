@@ -1,5 +1,5 @@
 <ul id="user-list">
-    <div>
+    <div class="sg-userlist">
     </div>
 </ul>
 
