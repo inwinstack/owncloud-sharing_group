@@ -1,5 +1,5 @@
 { "translations": {
-    "Sharing Group" : "分享群組",
+    "Sharing Group" : "分享群組管理",
     "A valid group name must be provided" : "請輸入有效的群組名稱",
     "Error creating group" : "創建群組失敗",
     "Your change are success" : "修改成功",
@@ -23,15 +23,22 @@
     "Group" : "群組",
     "Everyone" : "所有人",
     "Groups" : "群組",
-    "APPLY" : "送出",
-    "CANCEL" : "取消",
+    "Add" : "加入",
+    "Cancel" : "取消",
     "All" : "全選",
     "None" : "清空",
-    "Inverse": "反選",
-    "export": "匯出",
-    "import": "匯入",
-    "Has been shown": "已顯示",
-    "Load one hundred of users": "載入 100 個使用者",
-    "Load all users": "載入全部使用者"
+    "Inverse" : "反選",
+    "export" : "匯出",
+    "import" : "匯入",
+    "Search" : "搜尋",
+    "Add friend" : "新增好友",
+    "Has been shown" : "已顯示",
+    "Load next 100 users" : "載入下 100 個使用者",
+    "Load all users" : "載入全部使用者",
+    "Add friends" : "新增朋友",
+    "Delete friends" : "刪除朋友",
+    "Load" : "載入",
+    "Load All" : "載入全部",
+    "My friends" : "我的朋友"
 },"pluralForm" :"nplurals=1; plural=0;"
 }
