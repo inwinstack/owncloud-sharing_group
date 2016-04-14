@@ -237,7 +237,7 @@ var UserList = {
         $.each($('#checkuser').data('user') , function(index, user) {
             var user = $('#id-' + user);
             var img = $('<img>').attr({
-                'src' : '/owncloud-core/apps/sharing_group/img/check.png',
+                'src' : OC.imagePath('sharing_group','check.png'),
                 'class' : 'img-check'
             });
             var label = user.closest('label');
@@ -370,7 +370,7 @@ $(function () {
         var label = $(this).closest('label');
         var id = label.find('input').context.id.split('-')[1];
         var img = $('<img>').attr({
-            'src' : '/owncloud-core/apps/sharing_group/img/check.png',
+            'src' : OC.imagePath('sharing_group','check.png'),
             'class' : 'img-check'
         });
    
@@ -451,7 +451,7 @@ $(function () {
             var user = $('#id-' + user);
             var label = user.closest('label');
             var img = $('<img>').attr({
-                'src' : '/owncloud-core/apps/sharing_group/img/check.png',
+                'src' : OC.imagePath('sharing_group','check.png'),
                 'class' : 'img-check'
             });
 
