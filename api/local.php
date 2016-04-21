@@ -156,7 +156,11 @@ class Local {
 					$share['url'] = \OC::$server->getURLGenerator()->linkToRouteAbsolute('files_sharing.sharecontroller.showShare', ['token' => $share['token']]);
 				}
 			}
-
+			foreach(\OCA\Sharing_Group\Data::readGroups() as $group) {
+                		$sharing_groups[$group['id']] = $group['name'];
+            		}
+			self::idToname($shares, $sharing_groups);
+			
 			return new \OC_OCS_Result($shares);
 		}
 	}
