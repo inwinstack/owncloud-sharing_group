@@ -30,7 +30,7 @@ namespace OCA\Sharing_Group\API;
 use OC\HintException;
 
 class Local {
-
+   
     public static function getAllShares($params) {
 		if (isset($_GET['shared_with_me']) && $_GET['shared_with_me'] !== 'false') {
 				return self::getFilesSharedWithMe();
@@ -207,6 +207,11 @@ class Local {
 		$content = $view->getDirectoryContent($path);
 
 		$result = array();
+
+        foreach(\OCA\Sharing_Group\Data::readGroups() as $group) {
+                $sharing_groups[$group['id']] = $group['name'];
+        }
+
 		foreach ($content as $file) {
 			// workaround because folders are named 'dir' in this context
 			$itemType = $file['type'] === 'file' ? 'file' : 'folder';
@@ -218,7 +223,8 @@ class Local {
              * So use this solution to filter share type of sharing group.
              * Until the owncloud client can identify sharing group.
             **/
-            $share = array_filter($share, array('OCA\Sharing_Group\API\Local', 'isSharingGroup')); 
+           // $share = array_filter($share, array('OCA\Sharing_Group\API\Local', 'isSharingGroup'));
+            $share = self::idToname($share, $sharing_groups);
 			if($share) {
 				$receivedFrom =  \OCP\Share::getItemSharedWithBySource($itemType, $file['fileid']);
 				reset($share);
@@ -243,6 +249,15 @@ class Local {
 
     private static function isSharingGroup($var) {
         return $var['share_type'] != \OCP\Share::SHARE_TYPE_SHARING_GROUP;    
+    }
+
+    private static function idToname($shares, $sharing_groups) {
+        foreach($shares as $index=>$share) {
+            if(defined('\OCP\Share::SHARE_TYPE_SHARING_GROUP') && $share['share_type'] === \OCP\Share::SHARE_TYPE_SHARING_GROUP) {
+                $shares[$index]['share_with_displayname'] = $sharing_groups[(int)$share['share_with']];
+            }
+        }
+        return $shares;
     }
 
 
@@ -300,6 +315,7 @@ class Local {
 				$itemSourceName = basename($path);
 			case \OCP\Share::SHARE_TYPE_USER:
 			case \OCP\Share::SHARE_TYPE_GROUP:
+            case \OCP\Share::SHARE_TYPE_SHARING_GROUP:
 				$permissions = isset($_POST['permissions']) ? (int)$_POST['permissions'] : 31;
 				break;
 			case \OCP\Share::SHARE_TYPE_LINK:
