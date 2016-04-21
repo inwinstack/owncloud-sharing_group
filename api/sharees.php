@@ -87,7 +87,6 @@ class Sharees extends \OCA\Files_Sharing\API\Sharees {
 	public function search() {
 		$search = isset($_GET['search']) ? (string) $_GET['search'] : '';
 		$itemType = isset($_GET['itemType']) ? (string) $_GET['itemType'] : null;
-        file_put_contents('item',$itemType);
 		$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
 		$perPage = isset($_GET['perPage']) ? (int) $_GET['perPage'] : 200;
 
