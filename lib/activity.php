@@ -138,11 +138,6 @@ class Activity implements IExtension {
         }
     }
     public function getGroupParameter($activity) {
-        if ($activity['app'] === 'sharing_group') {
-             if($activity['subject'] === self::SUBJECT_SHARED_SHARING_GROUP_SELF) {
-                return 1;
-             }
-        }
 
         return false;
     }
