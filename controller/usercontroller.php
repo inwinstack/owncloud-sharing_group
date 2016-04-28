@@ -268,15 +268,11 @@ class UserController extends UsersController {
         $user = [];
         $userObject = $this->userManager->get($userID);
         
-        if($userID == $currentUser) {
+        if($userID == $currentUser || !isset($userObject)) {
             
             return new DataResponse(array('message'=>"The user does not exist." ,'status'=> 'error'));
         }
 
-        if(!isset($userObject)) {
-            
-            return new DataResponse(array('message'=>"The user does not exist." ,'status'=> 'error'));
-        }
         $userDisplayName = $userObject->getDisplayName();
         $userDisplayName = "○" . mb_substr($userDisplayName,1,NULL,"UTF-8");
         $user[$userObject->getUID()] = $userDisplayName;
