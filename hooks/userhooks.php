@@ -12,7 +12,8 @@ class UserHooks {
     }
 
     public function DeleteUser($user) {
-        Data::removeUserFromGroup($user->getUID());
+        Data::removeUserFromOwner($user->getUID());
+        Data::removeFriendFromOwner($user->getUID());
     }
 
     public function register() {
