@@ -209,24 +209,25 @@ class Data{
         $share_arr = [];
         $gids = [];
         $remove_arr = [];
+        $remove = [];
         foreach($data as $gid => $action) {
             $checkuid = self::readGroupUsers($gid);
-            $add = isset($action['add']) ? $action['add'] : [];
-            $remove = isset($action['remove']) ? $action['remove'] : [];
-            
-            foreach($add as $uid){
-                if(!in_array($uid,$checkuid)) {
-                    $sql_add .= '(?, ?, ?) ,';
-                    array_push($add_arr,$gid,$uid,$user);
+            $keys = array_keys($action);
+            if($keys[0] == "add") {
+                foreach($action['add'] as $uid){
+                    if(!in_array($uid,$checkuid)) {
+                        $sql_add .= '(?, ?, ?) ,';
+                        array_push($add_arr,$gid,$uid,$user);
+                    }
                 }
             }
-            
-            if(!empty($remove)) {
+
+            if($keys[0] == "remove") {
                 $sql = 'SELECT `id` FROM `*PREFIX*share` WHERE `share_type` = ? AND `share_with` = ? AND `item_type` = ?';
                 $query = DB::prepare($sql);
                 $check = $query->execute(array('7', $gid, 'folder'));
                 $share_check = self::getSharingQueryResult($check); 
-                
+
                 if(!empty($share_check)) {
                     array_push($share_arr,$share_check[0]['id']);
                     for($i = 1; $i < count($share_check); $i++){
@@ -234,8 +235,10 @@ class Data{
                         $sql_share .= 'OR `parent` = ?';
                     }
                 }
+                $remove = array_merge($remove, $action['remove']);
                 array_push($gids,$gid);
             }
+            
         }
         
         if(!empty($add_arr)) {
@@ -244,7 +247,7 @@ class Data{
             $result_add = $query->execute($add_arr);
         }
         
-        if(!empty($remove)) {
+        if(!empty($remove)) { 
             if(!empty($share_arr)) {
                 $sql_share .= ') AND (`share_with` = ?';
                 for($i = 1; $i < count($remove); $i++) {
@@ -267,7 +270,6 @@ class Data{
             $remove_arr = array_merge($gids, $remove);
             $query = DB::prepare($sql_remove);
             $result_remove = $query->execute($remove_arr);
-
         }
         /*
         if(DB::isError($result_remove) || DB::isError($result_add)) {
@@ -287,7 +289,7 @@ class Data{
      *  @param array $uids 
      *  @return success|error
      */
-    public static function removeUserFromGroup($uids) {
+    public static function removeUserFromGroup($uids, $hook=false) {
         $user = User::getUser();
         $sql = 'DELETE FROM `*PREFIX*sharing_group_user` WHERE `owner` = ? AND (`uid` = ?';
         for($i = 1 ; $i < count($uids); $i++) {
@@ -307,9 +309,26 @@ class Data{
 
         return 'success';
     }
+    /**
+     *  Remove sharing group friend and when Owner has been deleted
+     *
+     *  @param String $uid  the Owner's name
+     *  @return success|error
+     */
+    public static function removeFriendFromOwner($uid) {
+        $query = DB::prepare('DELETE `*PREFIX*sharing_group_friend`, `*PREFIX*sharing_group_user` FROM `*PREFIX*sharing_group_friend` INNER JOIN `*PREFIX*sharing_group_user` WHERE `*PREFIX*sharing_group_friend`.`uid` = `*PREFIX*sharing_group_user`.`uid` AND `*PREFIX*sharing_group_friend`.`uid`= ? OR `*PREFIX*sharing_group_friend`.`owner`= ? ');
+        $result = $query->execute(array($uid,$uid)); 
+        if(DB::isError($result) ) {
+		    Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+        
+            return 'error';
+        }
+        
+        return 'success';
+    }
 
     /**
-     *  Remove sharing group's user when Owner has been deleted
+     *  Remove sharing group's user and sharing groups when Owner has been deleted
      *
      *  @param String $uid  the Owner's name
      *  @return success|error
@@ -317,6 +336,7 @@ class Data{
     public static function removeUserFromOwner($uid) {
         $query = DB::prepare('DELETE `*PREFIX*sharing_groups`, `*PREFIX*sharing_group_user` FROM `*PREFIX*sharing_groups` INNER JOIN `*PREFIX*sharing_group_user` WHERE `*PREFIX*sharing_groups`.uid = `*PREFIX*sharing_group_user`.owner AND `*PREFIX*sharing_groups`.uid= ?');
         $result = $query->execute(array($uid));
+        
         if(DB::isError($result) ) {
 			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
             
@@ -365,10 +385,10 @@ class Data{
      *  @param String|null $filter
      *  @return function getGroupsQueryResult
      */
-    public static function readGroups($user = '', $filter = '') {
+    public static function readGroups($user = '', $filter = '', $limit = null, $offset = null) {
 
         $user = $user !== '' ? $user : User::getUser();
-        $query = DB::prepare('SELECT `id`, `name` FROM `*PREFIX*sharing_groups` WHERE `uid` = ?');
+        $query = DB::prepare('SELECT `id`, `name` FROM `*PREFIX*sharing_groups` WHERE `uid` = ?', $limit, $offset);
         $result = $query->execute(array($user));
 
         return self::getGroupsQueryResult($result, $filter);
