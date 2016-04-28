@@ -6,31 +6,30 @@
                 <span class="caret" id="caret-checkbox"></span>
             </div>
 
-            <ul class="sg-dropdown-menu checkuser" hidden=true>
+            <ul class="sg-dropdown-menu checkuser">
                 <li><a href="#" id="check-all"><?php p($l->t('All'))?></a></li>
                 <li><a href="#" id="clear-all"><?php p($l->t('None'))?></a></li>
                 <li><a href="#" id="inverse"><?php p($l->t('Inverse'))?></a></li>
             </ul>
         </div>
 
-        <div class="sg-dropdown" id="sg-dropdown-group">
+        <div class="sg-dropdown" id="sg-dropdown-group" style="display:none">
             <div type="button" class="sg-dropdown-toggle" id="toggle-group">
                 <span><?php p($l->t('Groups'))?></span>
                 <span class="caret" id="caret-group"></span>
             </div>
 
-            <div class="sg-dropdown-menu group" hidden=true>
+            <div class="sg-dropdown-menu group">
                 <div class="sg-dropdown-body">
-                    <ul class="sg-dropdown-scrollable">
-
-                    </ul>
+                    <div class="sg-dropdown-scrollable sg-dropdown-checkable">
+                    </div>
                 </div>
                 <div class="sg-dropdown-footer">
                     <div class="btn-group btn-group-justified">
-                        <div type="button" class="btn-flat" id="cancel">
+                        <div type="button" class="btn btn-flat" id="cancel">
                             <?php p($l->t('Cancel'))?>
                         </div>
-                        <div type="button" class="btn-flat" id="multi-group-select">
+                        <div type="button" class="btn btn-flat" id="multi-group-select">
                             <?php p($l->t('Add'))?>
                         </div>
                     </div>
@@ -62,25 +61,25 @@
                     <span><?php p($l->t('Load'))?></span>
                     <span class="caret" id="caret-load"></span>
                 </div>
-                <ul class="sg-dropdown-menu load" hidden=true>
-                    <li class="load-part-users"><a href="#" id="check-all"><?php p($l->t('Load next 100 users'))?></a></li>
-                    <li class="load-all-users"><a href="#" id="clear-all"><?php p($l->t('Load all users'))?></a></li>
+                <ul class="sg-dropdown-menu load" >
+                    <li class="load-part-users"><a href="#"><?php p($l->t('Load next 100 users'))?></a></li>
+                    <li class="load-all-users"><a href="#"><?php p($l->t('Load all users'))?></a></li>
                 </ul>
             </div>
 
 
-            <button type="button" class="load-part-users hidden">
+            <button type="button" class="load-part-users hidden" disabled="disabled">
                 <?php p($l->t('Load next 100 users'))?>
             </button>
 
-            <button type="button" class="load-all-users hidden">
+            <button type="button" class="load-all-users hidden" disabled="disabled">
                 <?php p($l->t('Load all users'))?>
             </button>
 
             <span> <?php  p($l->t('Has been shown'))?></span>
-            <span class="users-offset"></span>
+            <span class="users-offset">?</span>
             <span> / </span>
-            <span class="all-users-count"></span>
+            <span class="all-users-count">?</span>
         </div>
     </div>
 </div>
