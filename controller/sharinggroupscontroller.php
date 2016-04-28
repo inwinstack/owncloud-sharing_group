@@ -10,6 +10,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCA\Sharing_Group\Data;
 use OCP\IRequest;
 use OCP\User;
+use OC\Files\Filesystem;
 
 class SharingGroupsController extends Controller{
     
@@ -57,7 +58,6 @@ class SharingGroupsController extends Controller{
             $temp[$action[0]] = $users;
             $multigroup[$gid] = $temp;
         }
-
         $result = $this->data->controlGroupUser($multigroup);
 
         return new JSONResponse(array('status' => $result));
@@ -101,17 +101,39 @@ class SharingGroupsController extends Controller{
      * @param csv file $data
      * @return DataResponse
      */
-    public function importGroup($data) {
-        
+    public function importGroup($path) {
         if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode') {
-            $gids = $this->data->importGroup($data);
+
+            if(Filesystem::getMimeType($path) != 'text/csv') {
+                
+                return new DataResponse(['status' => 'error','msg' => 'Please select a CSV file.']);
+            }
+             
+            $handle = Filesystem::fopen($path,"r");
+            while(($data = fgetcsv($handle, 0, ",")) !== FALSE) {
+                $is_numeric = !is_numeric($data[0]);
+                $check_group = preg_match("/(?=^\.|^_)|(?=\W+)(?!\.)/",$data[1]);
+                $check_user = preg_match("/(?=^\.|^_|^\@)|(?=\W+)(?!\.)(?!\@)/",$data[2]);
+                if($data[0] == '') {
+                    continue;
+                }
+                
+                if($is_numeric || $check_group || $check_user) {
+                    
+                    return new DataResponse(['status' => 'error','msg' => 'This is not a vaild CSV file.']);
+                }
+                
+            }
+            $gids = $this->data->importGroup($path);
+            $msg = 'Importing groups and friend list successfully.';
         }
         else {
             $files = $this->request->getUploadedFile('fileToUpload'); 
             $gids = $this->data->importGroup($files);
+            $msg = 'Importing groups and user successfully.';
         }
         
-        return new DataResponse(['gids' => $gids, 'status' => 'success'],Http::STATUS_OK);
+        return new DataResponse(['gids' => $gids, 'status' => 'success', 'msg' => $msg],Http::STATUS_OK);
     } 
     
     /**
