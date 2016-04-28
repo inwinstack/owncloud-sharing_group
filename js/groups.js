@@ -183,13 +183,13 @@ var GroupList = {
 	},
     
     addCheckbox: function(id, name){
-        var li = $('<li>');
+        var label = $('<label>').attr({for: 'id-' + id});
         var checkbox = $('<input>').attr({
             type: 'checkbox', 
             id: 'id-' + id, 
             checked: false
         });
-        var label = $('<label>').attr({for: 'id-' + id}).text(name);
+        var span = $('<span>').text(name);
         
         checkbox.tristate();
         checkbox.data({
@@ -197,9 +197,9 @@ var GroupList = {
             'click': 0
         });
         
-        li.append(checkbox);
-        li.append(label);
-        $('.sg-dropdown-scrollable').append(li);
+        label.append(checkbox);
+        label.append(span);
+        $('.sg-dropdown-scrollable').append(label);
     },
 
     addLi: function(gid, name, count, user){
@@ -455,18 +455,18 @@ $(function() {
         }
     });
     
-    $('.sg-dropdown-scrollable').delegate('input:checkbox', 'click', function() {
+    $('.sg-dropdown-scrollable').delegate('input:checkbox', 'change', function() {
         var checkbox = $(this);
+
         if(checkbox.data('origin') === 'unchecked' && checkbox.attr('checked') === undefined) {
-            checkbox.tristate('state', null);
+            checkbox.tristate('state', false);
         }
-        if(checkbox.data('origin') === 'checked' && checkbox.attr('checked') === undefined){
-            checkbox.tristate('state', null);
+        if(checkbox.data('origin') === 'checked' && checkbox.attr('checked') === undefined) {
+            checkbox.tristate('state', false);
         }
-    });
-    
-    $('.sg-dropdown-scrollable').delegate('input:checkbox', 'click', function() {
-       $(this).data('click',1);
+
+        $(this).data('click',1);
+       // event.stopPropagation();
     });
 
     $('#toggle-group').click(function(event) {

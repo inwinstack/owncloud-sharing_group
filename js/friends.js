@@ -108,8 +108,10 @@ var UserList = {
         var user = $('#checkuser').data('checkeduser');
         if(user.length > 0) {
             $('#sg-deletefriend').removeAttr('disabled');
+            $('#sg-dropdown-group').show();
         }
         else {
+            $('#sg-dropdown-group').hide();
             $('#sg-deletefriend').attr('disabled','disabled');
         }
     },
@@ -125,7 +127,6 @@ var UserList = {
     
     compareSame: function(gid) {
         var users = [];
-        var length = 0;
         $('#group-list').data(gid).filter(function(user) {
             $.each($('#checkuser').data('checkeduser'), function(index, checkuser) {
                 if (user == checkuser) {
@@ -206,7 +207,12 @@ var UserList = {
             $userList.find('.sg-userlist').append(label);
         }
         else {
-            var span = $('<span>').text(t(appname,'This group is empty'));
+            if(UserList.currentGid == '_everyone') {
+                var span = $('<span>').text(t(appname,'you don\'t add any friend yet'));
+            }
+            else {
+                var span = $('<span>').text(t(appname,'This group is empty'));
+            }
             var label = $('<label>');
                     
             label.append(span);
@@ -250,6 +256,15 @@ var UserList = {
     },
     
     quantity: function(offset, limit){
+        if(offset != limit) {
+            $('.load-part-users').removeAttr('disabled');
+            $('.load-all-users').removeAttr('disabled');
+        }
+        else {
+            $('.load-part-users').attr('disabled','disabled');
+            $('.load-all-users').attr('disabled','disabled');
+        }
+
         $('.users-offset').text(offset);
         $('.all-users-count').text(limit);
     },
@@ -294,18 +309,6 @@ var UserList = {
             });
     },
     
-    dropdown: function(target) {
-        var menu = $('.sg-dropdown-menu'+target)
-        
-        if(menu.attr('hidden') == undefined) {            
-            menu.attr('hidden',true);
-        }
-        else {
-            $('.sg-dropdown-menu').attr({hidden:true});
-            menu.attr('hidden',false);
-        }
-    },
-
     init: function (users) {
         var userid = Object.keys(users.data);
         UserList.uid = UserList.uid.concat(userid);
@@ -349,17 +352,40 @@ var UserList = {
 			});
     },
     
+    adjustControlsWidth: function() {
+        if($('#controls').length) {
+            var controlsWidth;
+            // if there is a scrollbar …
+            if($('#app-content').get(0).scrollHeight > $('#app-content').height()) {
+                if($(window).width() > 768) {
+                    controlsWidth = $('#content').width() - $('#app-navigation').width() - OC.Util.getScrollBarWidth();
+                    if (!$('#app-sidebar').hasClass('hidden') && !$('#app-sidebar').hasClass('disappear')) {
+                        controlsWidth -= $('#app-sidebar').width();
+                    }
+                } else {
+                    controlsWidth = $('#content').width() - OC.Util.getScrollBarWidth();
+                }
+            } else { // if there is none
+                if($(window).width() > 768) {
+                    controlsWidth = $('#content').width() - $('#app-navigation').width();
+                    if (!$('#app-sidebar').hasClass('hidden') && !$('#app-sidebar').hasClass('disappear')) {
+                        controlsWidth -= $('#app-sidebar').width();
+                    }
+                } else {
+                    controlsWidth = $('#content').width();
+                }
+            }
+            $('#controls').css('width', controlsWidth);
+            $('#controls').css('min-width', controlsWidth);
+        }
+    },
 };
 
 $(function () {
 	$userList = $('#user-list');
-    var controlsWidth = $(window).width()-$('#app-navigation').width(); 
     // calculate initial limit of users to load
 	var initialUserCountLimit = 100;
-
-    $('#controls').css('width', controlsWidth)
-    $('#controls').css('min-width', controlsWidth)
-
+    UserList.adjustControlsWidth();
 	// Implements User Search
 	filter = new UserManagementFilter($('#usersearchform input'), UserList, GroupList);
     
@@ -392,7 +418,7 @@ $(function () {
         UserList.checktristate();
     });
     
-    $('#checkuser').click( function() {
+    $('#checkuser').click(function(event) {
         var originState = $('#checkuser').data('origin'); 
         var checkuser = $('#checkuser'); 
         
@@ -411,32 +437,43 @@ $(function () {
         
         event.stopPropagation();
     });
-    
-    $('#controls').delegate('.sg-dropdown','click', function(event){
-        var id = event.currentTarget.id.split("-")[2];
-        UserList.dropdown('.'+id);
+
+    $('.sg-dropdown').click(function(event) {
+        var menu = $(event.target).parents('.sg-dropdown').find('.sg-dropdown-menu');
+        if(menu.is(':visible')) {
+            menu.hide();
+        }
+        else {
+            menu.show();
+        }
     });
     
     $(document).on('click', function(event) {
-        if ($(event.target).closest('.sg-dropdown').length != 1  && $(event.target).closest('#sg-dropdown-group').length != 1 ) {
-            $('.sg-dropdown-menu').attr({hidden:true});
+        var target = $(event.target);
+
+        if (!target.parents('#sg-dropdown-group').length) {
+            $('.sg-dropdown-menu.group').hide();
         }
+        if (!target.parents('#sg-dropdown-checkuser').length) {
+            $('.sg-dropdown-menu.checkuser').hide();
+        }
+        if (!target.parents('#sg-dropdown-load').length) {
+            $('.sg-dropdown-menu.load').hide();
+        }
+
     });
 
     $('#check-all').click(function() {
         UserList.checkAll();
-        $('.sg-dropdown').attr({hidden:true});
     });
 
     $('#clear-all').click(function() {
         UserList.clearAll();
-        $('.sg-dropdown').attr({hidden:true});
     });
     
     $('#inverse').click(function() {
         var checkusers = $('#checkuser').data('checkeduser');
         var difference = UserList.compareDifference($('#checkuser').data('user'), checkusers);
-        
         $.each(checkusers , function(index, user) {
             var user = $('#id-' + user);
             var label = user.closest('label');
@@ -462,38 +499,30 @@ $(function () {
         
         UserList.isdisabled();
         UserList.checktristate();
-        $('.sg-dropdown').attr({hidden:true});
     });
     
-    $('.load-part-users').click(function() {
-	    $('.sg-dropdown-menu').attr({
-            hidden:true
-        });
-
-        if(!!UserList.noMoreEntries) {
+    $('.load-part-users').click(function(event) {
+        if(!!UserList.noMoreEntries || $(this).attr('disabled') == 'disabled') {
+            
             return;
         }
         UserList.update(UserList.currentGid, initialUserCountLimit);
-        
     });
 
     $('.load-all-users').click(function() {
-        
-        $('.sg-dropdown-menu').attr({
-            hidden:true
-        });
-    
-        if(!!UserList.noMoreEntries) {
+        if(!!UserList.noMoreEntries || $(this).attr('disabled') == 'disabled') {
+            
             return;
         }
         UserList.update(UserList.currentGid, parseInt($('#everyone-count').text()));
-        
     });
     
     $('#sg-dialog').dialog({
         autoOpen:false,
+        modal:true,
         buttons: [{
             text: t(appname,"Add"),
+            id: 'sg-add',
             click: function() {
                 $.get(
                     OC.generateUrl('/apps/sharing_group/addFriend'),
@@ -512,8 +541,17 @@ $(function () {
                         if(count == 0) {
 		                    UserList.empty();
                         }
+                        
                         everyone_count.text(count+1);
-                        UserList.quantity(UserList.length+1, count+1);
+                        UserList.length += 1;
+                        UserList.quantity(UserList.length, count+1);
+
+                        if(UserList.currentGid != '_everyone') {
+                            GroupList.showGroup('_everyone');
+                            return ;
+                        }
+
+                        UserList.init(user);
                         $.each(user.data, function( Uid, Name) {
                             UserList.addLabel(Uid,Name);
                         });
@@ -526,6 +564,9 @@ $(function () {
                 $('#sg-dialog').dialog("close");
             }
             }],
+        open: function() {
+            $('#sg-add').button('disable');
+        },
         close: function() {
             $('.sg-friend-name').data('id','');
             $('.sg-friend-name').text("");
@@ -536,6 +577,7 @@ $(function () {
     $('#sg-addfriend').click(function() {
         $('.oc-dialog').hide();
         if($('#sg-dialog').is(':visible')) {
+           
             return;
         }
         $('#sg-dialog').dialog("open");
@@ -563,11 +605,14 @@ $(function () {
                                     $('#id-'+user).closest('label').remove();
                                 })
                                 var everyone_count = $('#everyone-count');
-                                var count = parseInt(everyone_count.text());
-                                everyone_count.text(count - users.length);
+                                var delete_count = users.length;
+
+                                UserList.length -= delete_count;
+                                everyone_count.text(UserList.length);
+                                UserList.quantity(UserList.length, UserList.length);
                                 UserList.clearAll();
                                 GroupList.refreshGroupList();
-                                OC.Notification.showTemporary(t(appname, 'Delete successfully.'));
+                                OC.Notification.showTemporary(t(appname, 'Delete friends successfully.'));
                                 dialog.dialog('close');
                             }
                         });
@@ -583,7 +628,7 @@ $(function () {
                 dialog.remove();
             }
        });
-       var p = $('<p>').text(t(appname, 'Are you sure you want to delete these friends?'));
+       var p = $('<p>').text(t(appname, 'Are you sure you want to delete selected friends?'));
        dialog.append(p);
        dialog.dialog('open');
     });
@@ -607,30 +652,35 @@ $(function () {
             function (result) {
                 if(result.status == 'success') {
                     label.data('name',newname)
-                    OC.Notification.showTemporary(t(appname, 'Nickname rename successfully.'));
+                    OC.Notification.showTemporary(t(appname, 'Renaming nickname successfully.'));
                 }
             });
     });
     
-    $('.sg-searchbox').submit(function(){
-        
-        event.preventDefault();
+    $('.sg-searchbox').submit(function(event){
+        var userID = $('#sg-friend-searchbox').val()
+		event.preventDefault();
         $.get(
             OC.generateUrl('/apps/sharing_group/getUser'),
             { 
-                userID: $('#sg-friend-searchbox').val()
+                userID: userID
             },
             function (user) {
                 if(user.status === 'error') {
                     OC.Notification.showTemporary(t(appname, user.message));
                     $('.sg-friend-name').text("");
+                    $('#sg-add').button('disable');
                     
                     return;
                 }
-                $.each(user.data, function( Uid, Name) {
-                    $('.sg-friend-name').data('id',Uid);
-                    $('.sg-friend-name').text(Name);
-                });
+                else {
+                     
+                    $('#sg-add').button('enable');
+                    $.each(user.data, function( Uid, Name) {
+                        $('.sg-friend-name').data('id',Uid);
+                        $('.sg-friend-name').text(Name);
+                    });
+                }
             });
             
     });

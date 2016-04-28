@@ -303,6 +303,9 @@ var UserList = {
 
 $(function () {
 	$userList = $('#user-list');
+    var controlsWidth = $(window).width()-$('#app-navigation').width(); 
+    $('#controls').css('width', controlsWidth)
+    $('#controls').css('min-width', controlsWidth)
          
 	// Implements User Search
 	filter = new UserManagementFilter($('#usersearchform input'), UserList, GroupList);
