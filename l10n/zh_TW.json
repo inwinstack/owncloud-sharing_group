@@ -39,6 +39,8 @@
     "Delete friends" : "刪除朋友",
     "Load" : "載入",
     "Load All" : "載入全部",
-    "My friends" : "我的朋友"
+    "Friend List" : "朋友清單",
+    "Importing groups and friend list successfully." : "成功匯入群組與朋友清單。",
+    "Please choose a file." : "請選擇一個檔案。"
 },"pluralForm" :"nplurals=1; plural=0;"
 }
