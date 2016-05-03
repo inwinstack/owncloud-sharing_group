@@ -38,8 +38,11 @@ style('sharing_group', [
 <div id="app">
 	<div id="app-navigation">
 		<?php print_unescaped($this->inc('part.grouplist')); ?>
-		<?php print_unescaped($this->inc('part.settings')); ?>
-	</div>
+		<?php if(!$config->getValue('sharing_group_mode') == 'Friend_mode') {
+                print_unescaped($this->inc('part.settings'));
+              }
+	    ?>
+    </div>
 
 	<div id="app-content">
 		<div id="app-content-wrapper">

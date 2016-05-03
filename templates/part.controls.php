@@ -45,6 +45,8 @@
                 <button type="button" id="sg-deletefriend" disabled="disabled">
                     <?php p($l->t('Delete friends'))?>
                 </button>
+                <button class="export" id="export"><?php p($l->t('export'))?></button>
+                <button class="import" id="import"><?php p($l->t('import'))?></button>
 
                 <div id="sg-dialog" title="<?php p($l->t('Add friends')) ?>">
                     <form class="sg-searchbox" action="" method="GET">
