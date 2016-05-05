@@ -20,6 +20,8 @@ $container->query('UserHooks')->register();
 
 \OCP\Util::connectHook('OCA\Sharing_group','post_delete','OCA\Sharing_group\Data','removeUserFromGroup');
 
+//TODO Because this app is immature, and core has sharing group code. So command these codes temporarily.
+/**
 $container->query('OCP\INavigationManager')->add(function () use ($container) {
 	$urlGenerator = $container->query('OCP\IURLGenerator');
 	$l10n = \OC::$server->getL10N('sharing_group');
@@ -43,6 +45,8 @@ $container->query('OCP\INavigationManager')->add(function () use ($container) {
 		'name' => $l10n->t('Sharing Group'),
 	];
 });
+
+**/
 
 if(defined('\OCP\Share::SHARE_TYPE_SHARING_GROUP')) {
     
