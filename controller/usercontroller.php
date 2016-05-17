@@ -230,6 +230,19 @@ class UserController extends UsersController {
     /**
      * @NoAdminRequired
      * 
+     * search current user's friends 
+     *
+     * @return DataResponse
+     */
+    public function searchFriends($pattern) {
+        $friends = Data::searchFriends($pattern);
+        
+        return new DataResponse(array('data'=>$friends,'length'=>sizeof($friends) ,'status'=>'success'));
+    }
+
+    /**
+     * @NoAdminRequired
+     * 
      * count current user's friends  
      *
      * @return DataResponse
