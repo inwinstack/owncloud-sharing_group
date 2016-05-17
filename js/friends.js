@@ -311,8 +311,15 @@ var UserList = {
     
     init: function (users) {
         var userid = Object.keys(users.data);
-        UserList.uid = UserList.uid.concat(userid);
+        var statereset = $('#checkuser').attr('checked') !== undefined || $('#checkuser').attr('indeterminate') !== undefined;
         
+        UserList.uid = UserList.uid.concat(userid);
+        $('.user-listed').show();
+        $('#sg-dropdown-group').hide();
+        
+        if(statereset){
+            $('#checkuser').tristate('state', false);
+        }
         $('#checkuser').data({
             'user': UserList.uid,
             'checkeduser':[] ,
@@ -322,11 +329,15 @@ var UserList = {
     },
     
     update: function (gid, limit) {
+        if(UserList.updating == gid) {
+            return;
+        }
         if(!limit) {
 			limit = UserList.usersToLoad;
 		}
 		$userList.siblings('.loading').css('visibility', 'visible');
-		if(gid === undefined) {
+		UserList.updating = gid;
+        if(gid === undefined) {
 			gid = '_everyone';
 		}
         UserList.currentGid = gid;
@@ -347,9 +358,12 @@ var UserList = {
                 }
                 if(UserList.currentGid == gid) {
                     UserList.init(users);
+                    UserList.empty();
                     UserList.append(users, limit, gid);
                 }
-			});
+			}).always(function () {
+                UserList.updating = undefined;
+            });
     },
     
     adjustControlsWidth: function() {
@@ -449,8 +463,12 @@ $(function () {
     });
     
     $(document).on('click', function(event) {
+        var searchfriend = $('#sg-searchfriend-searchbox');
         var target = $(event.target);
-
+        
+        if(!searchfriend.is(":focus") && searchfriend.val() == '') {
+            $('#sg-searchfriend-cancel').hide();
+        }
         if (!target.parents('#sg-dropdown-group').length) {
             $('.sg-dropdown-menu.group').hide();
         }
@@ -570,7 +588,7 @@ $(function () {
         close: function() {
             $('.sg-friend-name').data('id','');
             $('.sg-friend-name').text("");
-            $('#sg-friend-searchbox').val("");
+            $('#sg-addfriend-searchbox').val("");
         }
     });
     
@@ -612,7 +630,7 @@ $(function () {
                                 UserList.quantity(UserList.length, UserList.length);
                                 UserList.clearAll();
                                 GroupList.refreshGroupList();
-                                OC.Notification.showTemporary(t(appname, 'Delete friends successfully.'));
+                                OC.Notification.showTemporary(t(appname, 'Deleting friends successfully.'));
                                 dialog.dialog('close');
                             }
                         });
@@ -656,9 +674,50 @@ $(function () {
                 }
             });
     });
+    $('#sg-searchfriend-searchbox').click(function(event) {
+        $('#sg-searchfriend-cancel').show();    
+    });
+
+    $('#sg-searchfriend-searchbox').change(function(event) {
+        var pattern = $(this).val();
+        $.get(
+            OC.generateUrl('/apps/sharing_group/search'),
+            { 
+                pattern: pattern
+            },
+            function (users) {
+                var label = $('<label>');
+                
+                UserList.init(users);
+                UserList.empty();
+                $('.user-listed').hide();
+                
+                if(users.data.length == 0) {
+                    var span = $('<span>').text(t(appname,'No search results.'));
+                    
+                    label.append(span);
+                    $userList.append(label);
+                }
+                else {
+                    var span = $('<span>').text(users.length + t(appname,' friends match search results.'));
+                    
+                    $.each(users.data, function (userId, userName) {
+                        UserList.addLabel(userId,userName);
+                    });
+                    label.append(span);
+                    $userList.append(label);
+                }
+            });
+    });
     
-    $('.sg-searchbox').submit(function(event){
-        var userID = $('#sg-friend-searchbox').val()
+    $('#sg-searchfriend-cancel').click(function() {
+        $('.user-listed').show();
+        $('#everyone-group').trigger('click');
+        $(this).hide();
+    });
+
+    $('.sg-searchbox').submit(function(event) {
+        var userID = $('#sg-addfriend-searchbox').val()
 		event.preventDefault();
         $.get(
             OC.generateUrl('/apps/sharing_group/getUser'),
