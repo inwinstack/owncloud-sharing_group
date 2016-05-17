@@ -34,6 +34,8 @@ OC.L10N.register(
     "All" : "全選",
     "None" : "清空",
     "Inverse" : "反選",
+    "No search results." : "沒有搜尋結果",
+    " friends match search results." : " 個朋友符合搜尋結果",
     "export" : "匯出",
     "import" : "匯入",
     "Your friend list already export to filelist" : "您的朋友清單已經匯出到檔案列表",
