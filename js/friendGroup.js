@@ -23,12 +23,6 @@ var GroupList = {
     
     showGroup: function (gid) {
 		UserList.empty();
-        UserList.clearAll();
-        var statereset = $('#checkuser').attr('checked') !== undefined || $('#checkuser').attr('indeterminate') !== undefined;
-        
-        if(statereset){
-            $('#checkuser').tristate('state', false);
-        }
         
         $groupList.find('li').removeClass('active');
         if (gid !== undefined && gid !== '') {
@@ -60,6 +54,7 @@ var GroupList = {
 			$('#newgroup-form').show();
 			$('#newgroup-init').hide();
 			$('#newgroup-name').focus();
+            $('#newgroup-name').removeClass("ui-status-error");
 			GroupList.handleAddGroupInput('');
 		}
 		else {
@@ -77,16 +72,17 @@ var GroupList = {
 		}
 	},
     
-    characterFilter: function(editInput, name, action){
+    characterFilter: function($editInput, name, action){
         if (name.match(/(?=^\.|^_)|(?=\W+)(?!\.)/)) {
-            editInput.addClass("ui-status-error");
+
+            return true;
         }
         else if(action == 'add' && $.inArray(name, GroupList.groups_name) > -1) {
-            editInput.addClass("ui-status-error");
+            
+            return true;
         }
-        else {
-            editInput.removeClass("ui-status-error");
-        }
+            
+        return false;
     },
 
 	isGroupNameValid: function(groupname) {
@@ -99,13 +95,32 @@ var GroupList = {
 		return true;
 	},
     
-    showErrorMsg :function ($editInput, key) {
-        if(key == "16") {
-            
+    showErrorMsg :function ($editInput, key, name, action) {
+        var timer = $editInput.data('timer');
+        var previousname = $editInput.data('previous'); 
+        
+        $editInput.data('previous', name);
+        if(previousname == name) {
             return;
         }
+       
+        if(timer) {
+            clearTimeout(timer);    
+        }
+        
+        if(GroupList.characterFilter($editInput, name, action)) {
+            $editInput.addClass("ui-status-error");
+        }
+        else {
+            $editInput.removeClass("ui-status-error");
+        }
+        
         if($editInput.hasClass('ui-status-error')) {
-            OC.Notification.showTemporary(t(appname, 'A valid group name must be provided'),{isHTML: false, timeout: 1});
+            var timer = setTimeout(function() {
+                
+                OC.Notification.showTemporary(t(appname, 'A valid group name must be provided'),{isHTML: false, timeout: 1});
+            }, 500);
+            $editInput.data('timer',timer); 
         }
     },
 
@@ -126,25 +141,34 @@ var GroupList = {
         var $tmpelem = $editInput.parent('li');
         $editInput.focus();
 
+        $('#group-list').on('change', '#editInput', function(event) {
+            var newname = $editInput.val();
+            
+            GroupList.showErrorMsg($editInput, event.which, newname, 'rename');  
+            
+            if (newname != '' && !$editInput.hasClass('ui-status-error')) {
+                GroupList.renameGroup($element , $tmpelem, gid, newname, oldname);
+            }
+        });
+
         $('#group-list').on('keyup', '#editInput', function(event) {
                 var newname = $editInput.val();
-                               
-                GroupList.characterFilter($(this),newname);    
-                GroupList.showErrorMsg($editInput, event.which);  
-                
-                if (event.which == $.ui.keyCode.ESCAPE) {
+                var key = event.which;
+                if((key == $.ui.keyCode.ENTER && newname == oldname) || key == $.ui.keyCode.ESCAPE) {
+                    
+                    $('#group-list').off('keyup');
+                    $('#group-list').off('change');
                     $tmpelem.remove();
                     $element.show();
                 }
                 
-                if (newname != '' && event.which == $.ui.keyCode.ENTER && !$editInput.hasClass('ui-status-error')) {
-                        $('#group-list').off('keyup')
-                        GroupList.renameGroup($element , $tmpelem, gid, newname, oldname);
-                }
+                GroupList.showErrorMsg($editInput, key, newname, 'rename');  
         });
         
-        $('#rename-button').click(function() {
+        $('#rename-button').click(function(event) {
             var newname = $editInput.val();
+            
+            GroupList.showErrorMsg($editInput, event.which, newname, 'rename');  
             
             if (newname != '' && !$editInput.hasClass('ui-status-error'))  {   
                 GroupList.renameGroup($element, $tmpelem, gid, newname, oldname);
@@ -162,23 +186,26 @@ var GroupList = {
    	},
     
     renameGroup: function($element, $tmpelem , gid, newname, oldname) {
+        $('#group-list').off('keyup');
+        $('#group-list').off('change');
+        
         if(newname != oldname) {
-        $.post(
-            OC.generateUrl('/apps/sharing_group/renameGroup'),
-            {
-                gid: gid,
-                newname: newname
-            },
-            function (result) {
-                $element.find('.group-name').text(newname);
-                $element.attr('id', newname); 
-                $tmpelem.remove();
-                $element.show();
-                OC.Notification.showTemporary(t(appname, "Renaming sharing_group successfully."));
-                GroupList.groups_name.splice(GroupList.groups_name.indexOf(oldname),1);
-                GroupList.groups_name.push(newname);
-                //GroupList.sortGroups();
-            });
+            $.post(
+                OC.generateUrl('/apps/sharing_group/renameGroup'),
+                {
+                    gid: gid,
+                    newname: newname
+                },
+                function (result) {
+                    $element.find('.group-name').text(newname);
+                    $element.attr('id', newname); 
+                    $tmpelem.remove();
+                    $element.show();
+                    OC.Notification.showTemporary(t(appname, "Renaming sharing_group successfully."));
+                    GroupList.groups_name.splice(GroupList.groups_name.indexOf(oldname),1);
+                    GroupList.groups_name.push(newname);
+                    //GroupList.sortGroups();
+                });
         }
         else {
             $tmpelem.remove();
@@ -410,41 +437,38 @@ $(function() {
         GroupList.toggleAddGroup(e);
     });
     
-    
 	$(document).on('click', function(event) {
         if (!GroupList.isAddGroupButtonVisible() &&
 			!GroupList.elementBelongsToAddGroup(event.target)) {
 			
-            $('#newgroup-name').removeClass("ui-status-error");
             GroupList.toggleAddGroup();
 		}
 	});
     
     $('#newgroup-name').keyup(function(event) {
-        var newgroupname = $('#newgroup-name');
+        var newgroupInput = $('#newgroup-name');
         var name = $('#newgroup-name').val();
-        
-        GroupList.characterFilter($(this), name, 'add'); 
-        GroupList.showErrorMsg($(this), event.which);  
+        var key = event.which; 
+        GroupList.showErrorMsg(newgroupInput, key, name, 'add');  
 
-        if (!GroupList.isAddGroupButtonVisible() && event.keyCode === $.ui.keyCode.ESCAPE) {
+        if (!GroupList.isAddGroupButtonVisible() && key === $.ui.keyCode.ESCAPE) {
 			GroupList.toggleAddGroup();
 		}
 
-        if (event.which === $.ui.keyCode.ENTER && GroupList.isGroupNameValid(name) && !newgroupname.hasClass('ui-status-error')) {
-            GroupList.createGroup(newgroupname.val());
+        if (key === $.ui.keyCode.ENTER && GroupList.isGroupNameValid(name) && !newgroupInput.hasClass('ui-status-error')) {
+            GroupList.createGroup(name);
         }
     });
 	
     // Responsible for Creating Groups.
 	$('#newgroup-form .button').click(function(event) {
 		event.preventDefault();
-        var newgroupname = $('#newgroup-name');
-        if(GroupList.isGroupNameValid(newgroupname.val()) && !newgroupname.hasClass('ui-status-error')) {
-			GroupList.createGroup(newgroupname.val());
-        }
-        else {
-            OC.Notification.showTemporary(t(appname, 'A valid group name must be provided'));
+        var newgroupInput = $('#newgroup-name');
+        var name = newgroupInput.val();
+        GroupList.showErrorMsg(newgroupInput, event.which, name, 'add');  
+        
+        if(GroupList.isGroupNameValid(name) && !newgroupInput.hasClass('ui-status-error')) {
+			GroupList.createGroup(name);
         }
 	});
 
@@ -486,6 +510,7 @@ $(function() {
             event.stopPropagation();
             GroupList.editGroup(group);
         } else {
+            $('#sg-searchfriend-searchbox').val('');
             GroupList.showGroup(GroupList.getElementGID(group));
         }
 
