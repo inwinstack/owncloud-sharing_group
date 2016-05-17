@@ -27,6 +27,7 @@ $application->registerRoutes($this,[
 	   ['name' => 'page#index', 'url' => '/', 'verb' => 'GET'],
 	   ['name' => 'user#index', 'url' => '/user', 'verb' => 'GET'],
 	   ['name' => 'user#getFriendList', 'url' => '/getFriendList', 'verb' => 'GET'],
+	   ['name' => 'user#searchFriends', 'url' => '/search', 'verb' => 'GET'],
 	   ['name' => 'user#countFriends', 'url' => '/countFriends', 'verb' => 'GET'],
 	   ['name' => 'user#addFriend', 'url' => '/addFriend', 'verb' => 'GET'],
 	   ['name' => 'user#deleteFriends', 'url' => '/deleteFriends', 'verb' => 'GET'],
