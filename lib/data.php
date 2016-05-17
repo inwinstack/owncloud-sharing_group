@@ -107,6 +107,27 @@ class Data{
 
         return 'success';
     }
+    
+    /**
+     * search current user's friends 
+     *
+     * @param string $search
+     * @return function searchFriendsQueryResult
+     */
+    public static function searchFriends($search) {
+        $user = User::getUser();
+        $sql = 'SELECT `uid`, `nickname` FROM `*PREFIX*sharing_group_friend` WHERE owner = ? AND LOWER(`uid`) LIKE LOWER(?)';
+        $query = DB::prepare($sql);
+
+        $result = $query->execute(array($user, '%' . $search . '%'));
+        if(DB::isError($result)) {
+			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+            
+            return 'error';
+        }
+
+        return self::searchFriendsQueryResult($result);
+    }
 
     /**
      * add the user to friend list
@@ -975,6 +996,21 @@ class Data{
         return $data;
     }
     
+    /**
+     *  Process the result and return the users array
+     *  
+     *  @param \OC_DB_StatementWrapper $result
+     *  @return array
+     */
+    private static function searchFriendsQueryResult($result) {
+        $data = [];
+        while ($row = $result->fetchRow()) {
+            $data[$row['uid']] = $row['nickname'];
+        }
+
+        return $data;
+    }
+ 
     /**
      *  Process the result and return the users count
      *  
