@@ -1,3 +1,33 @@
+/* searchbox */
+#sg-searchfriend-searchbox {
+    position: relative;
+    font-size: 1.2em;
+    padding: 3px;
+    padding-left: 25px;
+    background: transparent url('../../../core/img/actions/search-moe.svg') no-repeat 6px center;
+    border: 0;
+    border-radius: 3px;
+    margin-top: 9px;
+    float: none;
+    width: 0;
+    cursor: pointer;
+    -webkit-transition: all 100ms;
+    -moz-transition: all 100ms;
+    -o-transition: all 100ms;
+    transition: all 100ms;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
+    opacity: .7;
+}
+#sg-searchfriend-searchbox:focus,
+#sg-searchfriend-searchbox:active {
+    color: #fff;
+    width: 155px;
+    max-width: 50%;
+    cursor: text;
+    background-color: #112;
+}
+
+/* status-error */
 .ui-status-error{
     border:1px solid #FF0000;
 }
