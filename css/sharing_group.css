@@ -18,6 +18,15 @@
     -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
     opacity: .7;
 }
+
+#sg-searchfriend-searchbox.focus {
+    color: #fff;
+    width: 155px;
+    max-width: 50%;
+    cursor: text;
+    background-color: #112;
+}
+
 #sg-searchfriend-searchbox:focus,
 #sg-searchfriend-searchbox:active {
     color: #fff;
