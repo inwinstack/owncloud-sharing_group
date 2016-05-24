@@ -23,7 +23,8 @@ var GroupList = {
     
     showGroup: function (gid) {
 		UserList.empty();
-        
+        $('#sg-searchfriend-searchbox').removeClass('focus');
+        $('#sg-searchfriend-cancel').hide();
         $groupList.find('li').removeClass('active');
         if (gid !== undefined && gid !== '') {
 			GroupList.getGroupLI(gid).addClass('active');

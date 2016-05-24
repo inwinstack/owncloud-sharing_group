@@ -465,8 +465,10 @@ $(function () {
     $(document).on('click', function(event) {
         var searchfriend = $('#sg-searchfriend-searchbox');
         var target = $(event.target);
-        
-        if(!searchfriend.is(":focus") && searchfriend.val() == '') {
+        if(!searchfriend.is(":focus") && searchfriend.data('isSearched') == false) {
+            searchfriend.val('');
+            searchfriend.removeClass("focus");
+            searchfriend.data('isSearched',false);
             $('#sg-searchfriend-cancel').hide();
         }
         if (!target.parents('#sg-dropdown-group').length) {
@@ -674,45 +676,56 @@ $(function () {
                 }
             });
     });
-    $('#sg-searchfriend-searchbox').click(function(event) {
+    $('#sg-searchfriend-searchbox').data('isSearched',false).click(function(event) {
+        $(this).addClass("focus");
         $('#sg-searchfriend-cancel').show();    
     });
 
-    $('#sg-searchfriend-searchbox').change(function(event) {
+    $('#sg-searchfriend-searchbox').on('keyup', function(event) {
         var pattern = $(this).val();
-        $.get(
-            OC.generateUrl('/apps/sharing_group/search'),
-            { 
-                pattern: pattern
-            },
-            function (users) {
-                var label = $('<label>');
-                
-                UserList.init(users);
-                UserList.empty();
-                $('.user-listed').hide();
-                
-                if(users.data.length == 0) {
-                    var span = $('<span>').text(t(appname,'No search results.'));
+        if(event.which == $.ui.keyCode.ENTER) {
+            $.get(
+                OC.generateUrl('/apps/sharing_group/search'),
+                { 
+                    pattern: pattern,
+                    gid: UserList.currentGid
+                },
+                function (users) {
+                    var label = $('<label>');
                     
-                    label.append(span);
-                    $userList.append(label);
-                }
-                else {
-                    var span = $('<span>').text(users.length + t(appname,' friends match search results.'));
-                    
-                    $.each(users.data, function (userId, userName) {
-                        UserList.addLabel(userId,userName);
-                    });
-                    label.append(span);
-                    $userList.append(label);
-                }
-            });
+                    UserList.init(users);
+                    UserList.empty();
+                    $('.user-listed').hide();
+                    $('#sg-searchfriend-searchbox').data('isSearched',true);
+                    if(users.data.length == 0) {
+                        var span = $('<span>').text(t(appname,'No search results.'));
+                        
+                        label.append(span);
+                        $userList.append(label);
+                    }
+                    else {
+                        var span = $('<span>').text(users.length + t(appname,' friends match search results.'));
+                        
+                        $.each(users.data, function (userId, userName) {
+                            UserList.addLabel(userId,userName);
+                        });
+                        label.append(span);
+                        $userList.append(label);
+                    }
+                });
+        }
     });
     
     $('#sg-searchfriend-cancel').click(function() {
+        var searchbox = $('#sg-searchfriend-searchbox');
+        
         $('.user-listed').show();
-        $('#everyone-group').trigger('click');
+        searchbox.removeClass("focus");
+        
+        if(searchbox.data('isSearched') == true) {
+            $('#group-list').find('li.active').trigger('click');
+            searchbox.data('isSearched',false);
+        }
         $(this).hide();
     });
 
