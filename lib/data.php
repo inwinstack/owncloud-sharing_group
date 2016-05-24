@@ -114,8 +114,24 @@ class Data{
      * @param string $search
      * @return function searchFriendsQueryResult
      */
-    public static function searchFriends($search) {
+    public static function searchFriends($search, $gid = NULL) {
         $user = User::getUser();
+        
+        if($gid != NULL) {
+        
+            $sql = 'SELECT `*PREFIX*sharing_group_friend`.`uid`, `nickname`  FROM `*PREFIX*sharing_group_friend` INNER JOIN `*PREFIX*sharing_group_user` ON `*PREFIX*sharing_group_friend`.`uid`=`*PREFIX*sharing_group_user`.`uid` WHERE `*PREFIX*sharing_group_friend`.`owner` = ? AND LOWER(`*PREFIX*sharing_group_friend`.`uid`) LIKE LOWER(?) AND `gid` = ?';
+            $query = DB::prepare($sql);
+
+            $result = $query->execute(array($user, '%' . $search . '%', $gid));
+            if(DB::isError($result)) {
+                Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+                
+                return 'error';
+            }
+
+            return self::searchFriendsQueryResult($result);
+
+        }
         $sql = 'SELECT `uid`, `nickname` FROM `*PREFIX*sharing_group_friend` WHERE owner = ? AND LOWER(`uid`) LIKE LOWER(?)';
         $query = DB::prepare($sql);
 

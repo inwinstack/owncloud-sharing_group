@@ -234,8 +234,11 @@ class UserController extends UsersController {
      *
      * @return DataResponse
      */
-    public function searchFriends($pattern) {
-        $friends = Data::searchFriends($pattern);
+    public function searchFriends($pattern, $gid) {
+        if($gid == '_everyone') {
+            $gid = NULL;
+        }
+        $friends = Data::searchFriends($pattern,$gid);
         
         return new DataResponse(array('data'=>$friends,'length'=>sizeof($friends) ,'status'=>'success'));
     }
