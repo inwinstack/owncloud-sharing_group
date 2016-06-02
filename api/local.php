@@ -221,14 +221,9 @@ class Local {
 			$itemType = $file['type'] === 'file' ? 'file' : 'folder';
 			$share = \OCP\Share::getItemShared($itemType, $file['fileid']);
 
-            /**
-             * TODO 
-             * owncloud client can't identify SHARE_TYPE_SHARING_GROUP.
-             * So use this solution to filter share type of sharing group.
-             * Until the owncloud client can identify sharing group.
-            **/
-           // $share = array_filter($share, array('OCA\Sharing_Group\API\Local', 'isSharingGroup'));
-            $share = self::idToname($share, $sharing_groups);
+            if(isset($sharing_groups)) {
+                $share = self::idToname($share, $sharing_groups);
+            }
 			if($share) {
 				$receivedFrom =  \OCP\Share::getItemSharedWithBySource($itemType, $file['fileid']);
 				reset($share);
