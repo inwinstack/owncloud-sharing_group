@@ -176,6 +176,62 @@ class Sharees extends \OCA\Files_Sharing\API\Sharees {
 		return $response;
 	}
 
+	/**
+	 * @param string $search
+	 * @return array possible sharees
+	 */
+	protected function getRemote($search) {
+		$this->result['remotes'] = [];
+
+		// Search in contacts
+		//@todo Pagination missing
+		$addressBookContacts = $this->contactsManager->search($search, ['CLOUD', 'FN']);
+		$foundRemoteById = false;
+		foreach ($addressBookContacts as $contact) {
+			if (isset($contact['CLOUD'])) {
+				foreach ($contact['CLOUD'] as $cloudId) {
+					if (strtolower($contact['FN']) === $search || strtolower($cloudId) === $search) {
+						if (strtolower($cloudId) === $search) {
+							$foundRemoteById = true;
+						}
+						$this->result['exact']['remotes'][] = [
+							'label' => $contact['FN'],
+							'value' => [
+								'shareType' => Share::SHARE_TYPE_REMOTE,
+								'shareWith' => $cloudId,
+							],
+						];
+					} else {
+						$this->result['remotes'][] = [
+							'label' => $contact['FN'],
+							'value' => [
+								'shareType' => Share::SHARE_TYPE_REMOTE,
+								'shareWith' => $cloudId,
+							],
+						];
+					}
+				}
+			}
+		}
+
+		if (!$this->shareeEnumeration) {
+			$this->result['remotes'] = [];
+		}
+
+		if (!$foundRemoteById && substr_count($search, '@') >= 1 && substr_count($search, ' ') === 0 && $this->offset === 0 && !preg_match("/.*@mail.edu.tw/",$search,$result)) {
+			$this->result['exact']['remotes'][] = [
+				'label' => $search,
+				'value' => [
+					'shareType' => Share::SHARE_TYPE_REMOTE,
+					'shareWith' => $search,
+				],
+			];
+		}
+
+		$this->reachedEndFor[] = 'remotes';
+	}
+
+
 }
 
 ?>
