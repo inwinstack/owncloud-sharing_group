@@ -159,7 +159,9 @@ class Local {
 			foreach(\OCA\Sharing_Group\Data::readGroups() as $group) {
                 $sharing_groups[$group['id']] = $group['name'];
             }
-			$shares = self::idToname($shares, $sharing_groups);
+		if(isset($sharing_groups)) {	
+		    $shares = self::idToname($shares, $sharing_groups);
+		}
 			
 			return new \OC_OCS_Result($shares);
 		}
