@@ -40,14 +40,14 @@
             
     <div class="user-listed">
         <?php if(\OC_Config::getValue('sharing_group_mode') == 'Friend_mode'){ ?>
-            <button type="button" id="sg-addfriend">
+            <button type="button" id="sg-addfriend" class="sharing_group">
                 <?php p($l->t('Add friends'))?>
             </button>
-            <button type="button" id="sg-deletefriend" disabled="disabled">
+            <button type="button" id="sg-deletefriend" class="sharing_group" disabled="disabled">
                 <?php p($l->t('Delete friends'))?>
             </button>
-            <button class="export" id="export"><?php p($l->t('export'))?></button>
-            <button class="import" id="import"><?php p($l->t('import'))?></button>
+            <button class="export" id="export" class="sharing_group"><?php p($l->t('export'))?></button>
+            <button class="import" id="import" class="sharing_group"><?php p($l->t('import'))?></button>
 
             <div id="sg-dialog" title="<?php p($l->t('Add friends')) ?>">
                 <form class="sg-searchbox" action="" method="GET">
@@ -71,11 +71,11 @@
         </div>
         
 
-        <button type="button" class="load-part-users hidden" disabled="disabled">
+        <button type="button" class="load-part-users hidden sharing_group" disabled="disabled">
             <?php p($l->t('Load next 100 users'))?>
         </button>
 
-        <button type="button" class="load-all-users hidden" disabled="disabled">
+        <button type="button" class="load-all-users hidden sharing_group" disabled="disabled">
             <?php p($l->t('Load all users'))?>
         </button>
 

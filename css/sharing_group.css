@@ -156,3 +156,8 @@ li .ui-status-error {
 input[type="text"].sg-username:focus {
     border: 1px solid #999;
 }
+
+button.sharing_group {
+    height : auto;
+    width : auto;
+}

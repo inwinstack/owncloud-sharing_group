@@ -208,7 +208,7 @@ var UserList = {
         }
         else {
             if(UserList.currentGid == '_everyone') {
-                var span = $('<span>').text(t(appname,'you don\'t add any friend yet'));
+                var span = $('<span>').text(t(appname,"You do not add any friend yet."));
             }
             else {
                 var span = $('<span>').text(t(appname,'This group is empty'));

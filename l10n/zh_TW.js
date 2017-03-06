@@ -50,10 +50,10 @@ OC.L10N.register(
     "If this group had to share a file or folder, deleting this group will also be canceled share." : "若曾以此群組分享檔案或資料夾，刪除群組時也將同時取消分享。",
     "Are you sure you want to delete selected friends?" : "您確定要刪除被選取的朋友嗎？",
     "Please input a vaild Nickname." : "請輸入有效名稱",
-    "you don\'t add any friend yet" : "尚未加入任何好友",
+    "You do not add any friend yet." : "尚未加入任何好友",
     "Please select a CSV file." : "請選擇一個 CSV 檔案。",
     "Select the CSV file" : "選擇 CSV 檔案",
     "This is not a vaild CSV file." : "無效的 CSV 檔案。",
-    "Importing groups and friend list successfully." : "成功匯入群組與朋友清單。"
+    "Importing groups and friend list successfully." : "成功匯入群組與朋友清單。",
 },
 "nplurals=1; plural=0;");
