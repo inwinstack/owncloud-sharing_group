@@ -177,7 +177,7 @@ var GroupList = {
         });
         
         $(document).on('click', function(event) {
-            if (event.target.parentElement.className != 'group editing') {
+            if (event.target.parentElement != null && event.target.parentElement.className != 'group editing') {
                 $tmpelem.remove();
                 $element.show();
                 event.stopPropagation();
@@ -191,6 +191,13 @@ var GroupList = {
         $('#group-list').off('change');
         
         if(newname != oldname) {
+            $groups = document.getElementById("group-list");
+            $items = $groups.getElementsByTagName("li");
+            for (var i = 2; i < items.length; ++i) {
+                if (newname == items[i].getAttribute('id')){
+                        return;
+                }
+            }
             $.post(
                 OC.generateUrl('/apps/sharing_group/renameGroup'),
                 {
@@ -198,14 +205,16 @@ var GroupList = {
                     newname: newname
                 },
                 function (result) {
-                    $element.find('.group-name').text(newname);
-                    $element.attr('id', newname); 
-                    $tmpelem.remove();
-                    $element.show();
-                    OC.Notification.showTemporary(t(appname, "Renaming sharing_group successfully."));
-                    GroupList.groups_name.splice(GroupList.groups_name.indexOf(oldname),1);
-                    GroupList.groups_name.push(newname);
-                    //GroupList.sortGroups();
+                    if (result.status == 'success'){
+                        $element.find('.group-name').text(newname);
+                        $element.attr('id', newname); 
+                        $tmpelem.remove();
+                        $element.show();
+                        OC.Notification.showTemporary(t(appname, "Renaming sharing_group successfully."));
+                        GroupList.groups_name.splice(GroupList.groups_name.indexOf(oldname),1);
+                        GroupList.groups_name.push(newname);
+                        //GroupList.sortGroups();
+                   }
                 });
         }
         else {
