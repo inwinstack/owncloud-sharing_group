@@ -52,5 +52,6 @@ $application->registerRoutes($this,[
            ['name' => 'SharingGroups#getCreatedGroups', 'url' => '/getCreatedGroups', 'verb' => 'GET'],
            ['name' => 'SharingGroups#renameGroupPassword', 'url' => '/renameGroupPassword', 'verb' => 'POST'],
            ['name' => 'SharingGroups#copyGroup', 'url' => '/copyGroup', 'verb' => 'POST'],
+           ['name' => 'SharingGroups#getUsersInGroup', 'url' => '/getUsersInGroup', 'verb' => 'GET'],
     ]
 ]);

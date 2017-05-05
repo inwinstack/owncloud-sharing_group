@@ -326,4 +326,15 @@ class SharingGroupsController extends Controller{
         $result = $this->data->copyGroup($oldGid,$newGroupName);
         return new JSONResponse(array('data' => $result, 'status' => 'success'));
     }
+
+    /**
+     * @NoAdminRequired
+     *
+     * Get all users in sharing group
+     * @return JSONResponse
+     */
+    public function getUsersInGroup($gid) {
+        $result = $this->data->getUsersInGroup($gid);
+        return new JSONResponse(array('data' => $result, 'status' => 'success'));
+    }
 }

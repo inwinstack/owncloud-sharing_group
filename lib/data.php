@@ -1419,5 +1419,33 @@ class Data{
         return 'success';
         
     }
+
+    /**
+     *  get all users in sharing group
+     *  
+     *  @param  $gid 
+     *  @return array $data
+     */
+    public static function getUsersInGroup($gid) {
+        //['aaa' : ['displayname' :'AAA'],'bbb': ['displayname': 'BBB'],'ccc':['displayname': 'CCC']]
+        $data = [];
+        
+        $sql = 'SELECT `uid` FROM `*PREFIX*sharing_group_user` WHERE `gid` = ?';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($gid));
+        
+        if (DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+    
+            return 'error';
+        }
+        
+        while ($row = $result->fetchRow()) {
+            $data [$row['uid']] = array('displayname' => \OC_User::getDisplayName( $row['uid'] ));
+        }
+        ksort($data,SORT_NATURAL | SORT_FLAG_CASE);
+    
+        return $data;
+    }
 }
 
