@@ -36,6 +36,36 @@
 		</declaration>
 	</table>
 	<table>
+		<name>*dbprefix*sharing_group_for_favorite</name>
+		<declaration>
+			<field>
+				<name>gid</name>
+				<type>integer</type>
+				<default>0</default>
+				<notnull>true</notnull>
+				<length>20</length>
+			</field>
+			<field>
+				<name>uid</name>
+				<type>text</type>
+				<notnull>true</notnull>
+				<length>64</length>
+			</field>
+			<index>
+				<name>group_user_gid</name>
+				<field>
+					<name>gid</name>
+				</field>
+			</index>
+			<index>
+				<name>group_user_uid</name>
+				<field>
+					<name>uid</name>
+				</field>
+			</index>
+		</declaration>
+	</table>
+	<table>
 		<name>*dbprefix*sharing_group_user</name>
 		<declaration>
 			<field>
@@ -124,3 +154,4 @@
 	</table>
 
 </database>
+

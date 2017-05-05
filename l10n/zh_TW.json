@@ -41,6 +41,10 @@
     "Load All" : "載入全部",
     "Friend List" : "朋友清單",
     "Importing groups and friend list successfully." : "成功匯入群組與朋友清單。",
-    "Please choose a file." : "請選擇一個檔案。"
+    "Please choose a file." : "請選擇一個檔案。",
+    "My favorite share groups" : "我的最愛",
+    "My share groups" : "我的群組",
+    "I joined the share groups" : "我加入的群組"
+
 },"pluralForm" :"nplurals=1; plural=0;"
 }

@@ -70,9 +70,9 @@ class SharingGroupsController extends Controller{
      * @param String $name
      * @return JSONResponse
      */
-    public function create($name) {
+    public function create($name,$password='') {
         $response = array();
-        $response['status'] = $this->data->createGroups($name);
+        $response['status'] = $this->data->createGroups($name,$password);
         if($response['status'] == 'success') {
             $response['gid'] = $this->data->findGroupByName($name);
         }
@@ -211,5 +211,119 @@ class SharingGroupsController extends Controller{
         $result = $this->data->findAllGroup();
         
         return new JSONResponse($result);
+    }
+
+    /**
+     * @NoAdminRequired
+     *
+     * Join sharing group
+     * @return DataResponse
+     */
+    public function joinGroup($user,$groupId,$owner,$password=''){
+        if (!$this->data->inGroup($user, $groupId)){
+            return new DataResponse(array('message'=>"This user already joined the group." ,'status'=> 'error'));
+        }
+        
+        if (User::getUser() !== $owner){
+            if (!$this->data->checkPassword($groupId,$password)){
+                return new DataResponse(array('message'=>"This password is not correct." ,'status'=> 'error'));
+            }
+        }
+        
+        $result = $this->data->joinGroup($user,$groupId,$owner);
+        return new DataResponse(array('status' => $result));
+    }
+
+    /**
+     * @NoAdminRequired
+     *
+     * Get all joined sharing groups
+     * @return JSONResponse
+     */
+    public function getJoinedGroups(){
+        $result = $this->data->getJoinedGroups();
+        return new JSONResponse(array('data' => $result, 'status' => 'success'));
+    }
+
+    /**
+     * @NoAdminRequired
+     *
+     * Add favorite sharing group
+     * @return DataResponse
+     */
+    public function addFavoriteGroup($user,$groupId){
+        $result = $this->data->addFavoriteGroup($user,$groupId);
+        return new DataResponse(array('status' => $result));
+    }
+    
+    /**
+     * @NoAdminRequired
+     *
+     * Leave sharing group
+     * @return DataResponse
+     */
+    public function leaveGroup($user,$groupId){
+        if (!$this->data->inGroup($user, $groupId)){
+            return new DataResponse(array('message'=>"This user not existed in the group." ,'status'=> 'error'));
+        }
+        $result = $this->data->leaveGroup($user,$groupId);
+        return new DataResponse(array('status' => $result));
+    }
+
+    /**
+     * @NoAdminRequired
+     *
+     * Leave favorite sharing group
+     * @return DataResponse
+     */
+    public function leaveFavoriteGroup($user,$groupId){
+        $result = $this->data->leaveFavoriteGroup($user,$groupId);
+        return new DataResponse(array('status' => $result));
+    }
+
+    /**
+     * @NoAdminRequired
+     *
+     * Get all favorite sharing groups by user
+     * @return JSONResponse
+     */
+    public function getFavoriteGroups(){
+        $result = $this->data->getFavoriteGroups();
+        return new JSONResponse(array('data' => $result, 'status' => 'success'));
+    }
+
+    /**
+     * @NoAdminRequired
+     *
+     * Get all joined sharing groups
+     * @return JSONResponse
+     */
+    public function getCreatedGroups(){
+        $result = $this->data->getCreatedGroups();
+        return new JSONResponse(array('data' => $result, 'status' => 'success'));
+    }
+  
+    /**
+     * @NoAdminRequired
+     *
+     * Rename sharing group by sharing group id
+     * @param int $gid
+     * @param String $newname
+     * @return JSONResponse
+     */
+    public function renameGroupPassword($gid, $newPasswd) {
+        $result = $this->data->renameGroupPassword($gid, $newPasswd);
+        return new JSONResponse(array('status' => $result));
+    }
+
+    /**
+     * @NoAdminRequired
+     *
+     * Get all users in sharing group
+     * @return JSONResponse
+     */
+    public function copyGroup($oldGid,$newGroupName) {
+        $result = $this->data->copyGroup($oldGid,$newGroupName);
+        return new JSONResponse(array('data' => $result, 'status' => 'success'));
     }
 }

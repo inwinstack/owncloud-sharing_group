@@ -437,13 +437,13 @@ class Data{
      *  @param  String $name the sharing group name
      *  @return success|error
      */
-    public static function createGroups($name) {
+    public static function createGroups($name,$password) {
 	    $groups = self::findGroupByName($name);
         if(empty($groups)) {
             $user = User::getUser();
-            $sql = 'INSERT INTO `*PREFIX*sharing_groups` (`name`, `uid`) VALUES(?, ?)';
+            $sql = 'INSERT INTO `*PREFIX*sharing_groups` (`name`, `uid`, `password`) VALUES(?, ?, ?)';
             $query = DB::prepare($sql);
-            $result = $query->execute(array($name, $user));
+            $result = $query->execute(array($name, $user, md5($password)));
         
             if (DB::isError($result)) {
 			    Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
@@ -472,6 +472,10 @@ class Data{
         $query = DB::prepare($sql);
         $delete = $query->execute(array($gid));
         
+        $sql = 'DELETE FROM `*PREFIX*sharing_group_for_favorite` WHERE `gid` = ?';
+        $query = DB::prepare($sql);
+        $delete = $query->execute(array($gid));
+
         if(!DB::isError($delete)) {
             $sql = 'SELECT `id` FROM `*PREFIX*share` WHERE `share_type` = ? AND `share_with` = ?';
             $query = DB::prepare($sql);
@@ -829,7 +833,10 @@ class Data{
             return false;
         }
 
-        return $result !== null;
+        if ($result->rowCount() > 0){
+            return true;
+        }
+        return false;
     }
     
     /**
@@ -1144,5 +1151,273 @@ class Data{
        return $result;
     }
 
+    /**
+     *   Join sharing group
+     *
+     *  @param  $user the user name
+     *  @param  $groupId the share group id
+     *  @param  $owner the share group owner
+     *
+     *  @return success|error
+     */
+    public static function joinGroup($user,$groupId,$owner){
+        
+        $sql = 'INSERT INTO `*PREFIX*sharing_group_user`(`gid`, `uid`, `owner`) VALUES (?, ?, ?)';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($groupId,$user,$owner));
+        if(DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+    
+            return 'error';
+        }
+    
+        return 'success';
+
+    }
+
+    /**
+     *  get all joined sharing groups
+     *
+     *  @return array $data contains sharing group and group user
+     */
+    public static function getJoinedGroups(){
+        //['TestGrpup1': ['gid':123,'owner': 'User1','favorite':1,'count':1],
+        //'TestGroup2': ['gid':456,'owner': 'User2','favorite':0,'count': 2]]
+        $user = User::getUser();
+        $data = [];
+        
+        $sql = "SELECT  `*PREFIX*sharing_group_user`.`uid` ,  `*PREFIX*sharing_group_user`.`gid` ,  
+                `*PREFIX*sharing_groups`.`name` , `*PREFIX*sharing_groups`.`uid` AS owner,
+                CASE WHEN `*PREFIX*sharing_group_for_favorite`.`gid` is NULL
+                THEN 0
+                ELSE 1
+                END as favorite,
+                (SELECT Count(`*PREFIX*sharing_group_user`.`uid`)+1 
+                FROM `*PREFIX*sharing_group_user` 
+                Where `*PREFIX*sharing_group_user`.`gid` = `*PREFIX*sharing_groups`.`id`) as count
+                FROM  `*PREFIX*sharing_group_user`
+                LEFT OUTER JOIN  `*PREFIX*sharing_groups` ON  `*PREFIX*sharing_groups`.`id` =  `*PREFIX*sharing_group_user`.`gid`
+                LEFT OUTER JOIN  `*PREFIX*sharing_group_for_favorite` ON  `*PREFIX*sharing_group_for_favorite`.`gid` =  `*PREFIX*sharing_group_user`.`gid` 
+                and `*PREFIX*sharing_group_for_favorite`.`uid` = `*PREFIX*sharing_group_user`.`uid`
+                WHERE  `*PREFIX*sharing_group_user`.`uid` =  ?";
+
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($user));
+        
+        if (DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+        
+            return 'error';
+        }
+        while ($row = $result->fetchRow()) {
+            $data[ $row['name'] ] = array('owner' => $row['owner'], 'gid' => $row['gid'],'favorite' => $row['favorite'],'count' => $row['count']);
+        }
+
+        return $data;
+        
+    }
+
+    /**
+     *   Add favorite sharing group
+     *
+     *  @param  $user the user name
+     *  @param  $groupId the share group id
+     *
+     *  @return success|error
+     */
+    public static function addFavoriteGroup($user,$groupId){
+    
+        $sql = 'INSERT INTO `*PREFIX*sharing_group_for_favorite`(`gid`, `uid`) VALUES (?, ?)';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($groupId,$user));
+        if(DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+    
+            return 'error';
+        }
+    
+        return 'success';
+    
+    }
+
+    /**
+     *  Leave joined sharing group
+     *  
+     *  @param  $user the user name
+     *  @param  $groupId the share group id
+     *
+     *  @return success|error
+     */
+    public static function leaveGroup($user,$groupId){
+        
+        
+        $sql = 'DELETE FROM  `*PREFIX*sharing_group_user` WHERE  `gid` = ? AND  `uid` =  ?';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($groupId,$user));
+        if(DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+        
+            return 'error';
+        }
+        
+        return 'success';
+    }
+
+    /**
+     *  Leave favorite sharing group
+     *
+     *  @param  $user the user name
+     *  @param  $groupId the share group id
+     *
+     *  @return success|error
+     */
+    public static function leaveFavoriteGroup($user,$groupId){
+    
+    
+        $sql = 'DELETE FROM  `*PREFIX*sharing_group_for_favorite` WHERE  `gid` = ? AND  `uid` =  ?';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($groupId,$user));
+        if(DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+    
+            return 'error';
+        }
+    
+        return 'success';
+    }
+
+    /**
+     *  get all favorite sharing groups by uid
+     *
+     *  @param  $uid 
+     *  @return array $data contains sharing group and group user
+     */
+    public static function getFavoriteGroups(){
+        //['TestGrpup1': ['gid':123,'owner': 'User1'],'TestGroup2': ['gid':456,'owner': 'User2']]
+        $user = User::getUser();
+        $data = [];
+    
+        $sql = "SELECT  `*PREFIX*sharing_group_for_favorite`.`uid` ,  `*PREFIX*sharing_group_for_favorite`.`gid` ,  `*PREFIX*sharing_groups`.`name` , `*PREFIX*sharing_groups`.`uid` AS owner
+                FROM  `*PREFIX*sharing_group_for_favorite`
+                LEFT OUTER JOIN  `*PREFIX*sharing_groups` ON  `*PREFIX*sharing_group_for_favorite`.`gid` =  `*PREFIX*sharing_groups`.`id`
+                WHERE  `*PREFIX*sharing_group_for_favorite`.`uid` = ?";
+    
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($user));
+    
+        if (DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+    
+            return 'error';
+        }
+        while ($row = $result->fetchRow()) {
+            $data[ $row['name'] ] = array('owner' => $row['owner'], 'gid' => $row['gid']);
+        }
+    
+        return $data;
+    
+    }
+    
+    /**
+     *  get all your created sharing groups
+     *
+     *  @return array $data contains sharing groups
+     */
+    public static function getCreatedGroups(){
+        //['TestGrpup1': ['gid':123,'favorite':1,'count':1],
+        //'TestGroup2': ['gid':456,'favorite':0,'count': 2]]
+        $user = User::getUser();
+        $data = [];
+    
+        $sql = "SELECT  `*PREFIX*sharing_groups`.`id` as gid,  `*PREFIX*sharing_groups`.`uid` ,  `*PREFIX*sharing_groups`.`name` ,
+                CASE WHEN `*PREFIX*sharing_group_for_favorite`.`gid` is NULL
+                THEN 0
+                ELSE 1
+                END as favorite,
+                (SELECT Count(`*PREFIX*sharing_group_user`.`uid`)+1 
+                FROM `*PREFIX*sharing_group_user` 
+                Where `*PREFIX*sharing_group_user`.`gid` = `*PREFIX*sharing_groups`.`id`) as count
+                FROM  `*PREFIX*sharing_groups`
+                LEFT OUTER JOIN  `*PREFIX*sharing_group_for_favorite` ON  `*PREFIX*sharing_group_for_favorite`.`gid` =  `*PREFIX*sharing_groups`.`id` 
+                and `*PREFIX*sharing_group_for_favorite`.`uid` = `*PREFIX*sharing_groups`.`uid`
+                WHERE  `*PREFIX*sharing_groups`.`uid` =  ?";
+    
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($user));
+    
+        if (DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+    
+            return 'error';
+        }
+        while ($row = $result->fetchRow()) {
+            $data[ $row['name'] ] = array('gid' => $row['gid'],
+                    'favorite' => $row['favorite'],'count' => $row['count']);
+        }
+    
+        return $data;
+    
+    }
+
+    **
+     *  rename group password
+     *
+     *  @param  $gid the sharing group id
+     *  @param  $newPasswd the sharing group password
+     *  @return success|error
+     */
+    public static function renameGroupPassword($gid, $newPasswd) {
+        $user = User::getUser();
+        $sql = 'UPDATE `*PREFIX*sharing_groups` SET `password`= ? WHERE `id`= ? and `uid`= ?';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array(md5($newPasswd), $gid, $user));
+    
+        if (DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+    
+            return 'error';
+        }
+    
+        return 'success';
+    }
+
+    /**
+     *  copy group
+     *
+     *  @param  String $name the sharing group name
+     *  @param  String $newGroupName the new sharing group name
+     *  @return success|error
+     */
+    public static function copyGroup($oldGid,$newGroupName) {
+        //copy group
+        $sql = 'INSERT INTO `*PREFIX*sharing_groups`(`name`, `uid`, `password`)
+                SELECT ?, `uid`, `password`
+                FROM `oc_sharing_groups`
+                WHERE `id`= ?';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($newGroupName, $oldGid));
+        
+        if (DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+        
+            return 'error';
+        }
+        
+        //copy old group's user to new group
+        $sql = 'INSERT INTO `*PREFIX*sharing_group_user`(`gid`, `uid`, `owner`)
+                SELECT (select `id` from `*PREFIX*sharing_groups` where `name` = ? and `uid` = ?),`uid`, `owner`
+                FROM `*PREFIX*sharing_group_user`
+                WHERE `gid` = ?
+                ';
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($newGroupName,User::getUser(), $oldGid));
+        if (DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+        
+            return 'error';
+        }
+        return 'success';
+        
+    }
 }
 

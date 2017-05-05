@@ -42,5 +42,15 @@ $application->registerRoutes($this,[
 	   ['name' => 'SharingGroups#deleteGroup', 'url' => '/deleteGroup', 'verb' => 'POST'],
 	   ['name' => 'SharingGroups#importGroup', 'url' => '/importGroup', 'verb' => 'POST'],
 	   ['name' => 'SharingGroups#export', 'url' => '/export', 'verb' => 'GET'],
+           
+           ['name' => 'SharingGroups#joinGroup', 'url' => '/joinGroup', 'verb' => 'POST'],
+           ['name' => 'SharingGroups#getJoinedGroups', 'url' => '/getJoinedGroups', 'verb' => 'GET'],
+           ['name' => 'SharingGroups#addFavoriteGroup', 'url' => '/addFavoriteGroup', 'verb' => 'POST'],
+           ['name' => 'SharingGroups#leaveGroup', 'url' => '/leaveGroup', 'verb' => 'POST'],
+           ['name' => 'SharingGroups#leaveFavoriteGroup', 'url' => '/leaveFavoriteGroup', 'verb' => 'POST'],
+           ['name' => 'SharingGroups#getFavoriteGroups', 'url' => '/getFavoriteGroups', 'verb' => 'GET'],
+           ['name' => 'SharingGroups#getCreatedGroups', 'url' => '/getCreatedGroups', 'verb' => 'GET'],
+           ['name' => 'SharingGroups#renameGroupPassword', 'url' => '/renameGroupPassword', 'verb' => 'POST'],
+           ['name' => 'SharingGroups#copyGroup', 'url' => '/copyGroup', 'verb' => 'POST'],
     ]
 ]);
