@@ -27,6 +27,12 @@
 				<notnull>true</notnull>
 				<length>64</length>
 			</field>
+                        <field>
+                                <name>password</name>
+                                <type>text</type>
+                                <notnull>true</notnull>
+                                <length>255</length>
+                        </field>
 			<index>
 				<name>groups_uid</name>
 				<field>
