@@ -18,7 +18,7 @@
 
 #newgroup-name {
     margin: 6px;
-    width: 95%;
+    width: 100%;
     padding-right: 32px;
     box-sizing: border-box
 }
@@ -36,10 +36,17 @@
 }
 
 .isgroup .group-name {
-    width: 85%;
+	width: 95%;
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* File actions */
+.menuactions {
+	position: relative;
+	left: 95%;
+	bottom: 15px;
 }
 
 .isgroup.active .group-name {
@@ -133,6 +140,22 @@ li.active .rename {
 
 #group-list .oc-addnew-init {
 	padding: 0 31px;
+}
+
+table span.group-name {
+    position: relative;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    display: block;
+	top: 15px;
+    /*height: 50px;*/
+    /*line-height: 50px;*/
+    padding: 0;
+}
+
+#group-list span.group-name {
+	left: 50px;
+	margin-left: 50px;
 }
 
 #app-navigation .new-button{

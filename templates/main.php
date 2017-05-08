@@ -30,7 +30,8 @@ script('core', [
 style('sharing_group', [
     'sharing_group',
     'style',
-    'dropdown'
+    'dropdown',
+    'file'
 ]);
 
 ?>

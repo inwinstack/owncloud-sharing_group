@@ -1,6 +1,7 @@
 var $groupList,
     $GroupListLi,
 	$sortGroupBy,
+    $menuLink,
     appname = 'sharing_group';
     
 var GroupList = {
@@ -50,20 +51,24 @@ var GroupList = {
 	},
     
 	isAddGroupButtonVisible: function() {
-		return $('#newgroup-init').is(":visible");
+		return $('#newgroup-initial').is(":visible");
 	},
+
+    isGroupActionMenuVisible: function() {
+        return $('.fileActionsMenu').is(":visible");;
+    },
 
 	toggleAddGroup: function(event) {
 		if (GroupList.isAddGroupButtonVisible()) {
 			event.stopPropagation();
 			$('#newgroup-form').show();
-			$('#newgroup-init').hide();
+			$('#newgroup-initial').hide();
 			$('#newgroup-name').focus();
 			GroupList.handleAddGroupInput('');
 		}
 		else {
 			$('#newgroup-form').hide();
-			$('#newgroup-init').show();
+			$('#newgroup-initial').show();
 			$('#newgroup-name').val('');
 		}
 	},
@@ -203,20 +208,30 @@ var GroupList = {
     },
 
     addLi: function(gid, name, count, user){
-        var li = $('<li>').attr({
+        var li = $('<tr>').attr({
             'data-gid': gid , 
             id: name, 
             class: 'isgroup'
         });
-        var group = $('<a>')
+        var td = $('<td>').attr({class: 'groupname'});
+        var group = $('<a>');
+        var label = $('<label>').attr({for: 'select-group-4'});
+        var icon_div = $('<div>').attr({class: 'groupicon thumbnail'});
+
         var groupname = $('<span>').attr({class: 'group-name'});
         var util = $('<span>').attr({class: 'utils'});
         var usercount = $('<span>').attr({class: 'user-count'});
-        var action_delete = $('<a>').attr({
-            class: 'icon-delete action delete', 
-            original_title: '刪除'
+        var action_rename = $('<a>').attr({class: 'icon-rename action rename'});
+
+        var action_menu = $('<span>').attr({class: 'menuactions'});
+        $menuLink = $('<a>').attr({
+            class: 'action action-menu permanent',
+            id: 'action_menu'
         });
-        var action_rename= $('<a>').attr({class: 'icon-rename action rename'});
+        var menu_icon = $('<img>').attr({
+            class: 'svg', 
+            src: "../../../core/img/actions/more.png"
+        });
         
         if (user != null){
             user = user.split(",", count);
@@ -225,35 +240,32 @@ var GroupList = {
         else {
             $('#group-list').data(gid, []);
         }
+        $menuLink.append(menu_icon);
+        action_menu.append($menuLink);
+
         group.append(groupname.text(name));
-        util.append(action_delete);
-        util.append(action_rename);
-        util.append(usercount.text($('#group-list').data(gid).length)) 
-        li.append(group);
-        li.append(util);
+        group.append(action_menu);
+
+        label.append(icon_div);
+        td.append(label);
+        td.append(group);
+        li.append(td);
 
         return li;
     },
     
-    showGroupList: function(gids) {
+    showGroupList: function() {
 		$.get(
-			OC.generateUrl('/apps/sharing_group/getAllGroupsInfo'),
+			OC.generateUrl('/apps/sharing_group/getCreatedGroups'),
 			function(result) {
-                if (gids == undefined) {
-                    GroupList.initgroup.resolve(result);
-                }
-                else {
-                    $.each(result.data, function(index, group) {
-                        $.each(gids, function(index, gid) {
-                            if (group.id == gid) {
-                                GroupList.groups.push(group.id);
+                 $('.loading').css('visibility', 'hidden');
+                 $.each(result.data, function(index, group) {
+                    GroupList.groups.push(group.gid);
 
-                                $GroupListLi.after(GroupList.addLi(group.id, group.name, group.count, group.user));
-                                GroupList.sortGroups();
-                            }
-                        });
-                    });
-                }
+                    $GroupListLi.after(GroupList.addLi(group.gid, index, group.count, group.user));
+                    GroupList.sortGroups();
+                    GroupList.initgroup.resolve(result);
+                });
 			}
 		);
 	},
@@ -303,7 +315,8 @@ var GroupList = {
 		$.post(
 			OC.generateUrl('/apps/sharing_group/create'),
 			{
-				name: groupname
+				name: groupname,
+                password: 'test'
 			},
 			function(result) {
                 if (result.status == 'success') {
@@ -368,14 +381,14 @@ var GroupList = {
 				gid: gid
 			}, 
             function(result) {
+                $('.fileActionsMenu').remove();
                 if (result.status === 'success') {
-                    
-                    GroupList.showGroup('_everyone');
-                    GroupList.groups.splice(GroupList.groups.indexOf(gid),1);
-            
-                    GroupList.groups_name.splice(GroupList.groups_name.indexOf(groupname),1);
-
+                    var index = '#' + GroupList.groups_name[GroupList.groups.indexOf(String(gid))];
+                    $(index).remove();
                     OC.Notification.showTemporary(t(appname, 'delete group success'));
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
                 }
                 else {
                     OC.Notification.showTemporary(t(appname, 'delete group failed'));
@@ -386,22 +399,54 @@ var GroupList = {
 
 $(function() {
 	$groupList = $('#group-list');
+    
 	$GroupListLi = $('#group-list #everyone-group');
 	$GroupListLi.after($('<div class="loading" style="height: 200px; visibility: visible;"></div>'));
     GroupList.showGroupList();
     // Display or hide of Create Group List Element
 	$('#newgroup-form').hide();
-	$('#newgroup-init').on('click', function(e) {
+	$('#newgroup-initial').on('click', function(e) {
         GroupList.toggleAddGroup(e);
     });
-    
     
 	$(document).on('click', function(event) {
         if (!GroupList.isAddGroupButtonVisible() &&
 			!GroupList.elementBelongsToAddGroup(event.target)) {
 			GroupList.toggleAddGroup();
 		}
+
+        if(GroupList.isGroupActionMenuVisible) {
+            $('.fileActionsMenu').remove();
+        }
 	});
+
+    $('.grouptable').on('click', '.menuactions', function (event) {
+        event.stopPropagation();
+
+        if(GroupList.isGroupActionMenuVisible) {
+            $('.fileActionsMenu').remove();
+        }
+
+        var menuClass = $('<div>').attr({
+            class: 'fileActionsMenu popovermenu bubble open menu',
+            id: 'groupActionMenu'
+        });
+
+        var TEMPLATE_MENU =
+            '<ul>' +
+            '<li>' +
+            '<a href="#" class="menuitem action action-details permanent" id="action_delete"><span class="no-icon"></span><span>Delete</span></a>' +
+            '</li>' +
+            '</ul>';
+
+        menuClass.css('min-height', '50px');
+        menuClass.css('min-width', '100px');
+        menuClass.append(TEMPLATE_MENU);
+
+        //parentNode belongs which tr #id
+        var id = '#' + this.parentNode.innerText;
+        $(id).find('.menuactions').append(menuClass);
+    });
     
     $('#newgroup-name').keyup(function(event) {
         var newgroupname = $('#newgroup-name');
@@ -430,22 +475,34 @@ $(function() {
 	});
 
 	// click on group name
-	$groupList.on('click', 'li.isgroup', function(event) {
+	// $groupList.on('click', '#action_delete', function(event) {
+    //     var group = $(this);
+    //     if($(event.target).is('.action.delete')) {
+    // ($(event.target).is('.action.rename')) {
+    //         event.stopPropagation();
+	// 		event.preventDefault();
+    //         GroupList.editGroup(group);
+    //     } else {
+    //         GroupList.showGroup(GroupList.getElementGID(group));
+    //     }
+    // });
+
+    $('.grouptable').on('click', '#action_delete', function(event) {
         var group = $(this);
-        if($(event.target).is('.action.delete')) {
-			var id = group.find('a').closest('li').data('gid');
+        if($(event.target).is('span')) {
+			var id = group.find('span').closest('tr').data('gid');
             var groupname = group.find('.group-name').text();
 
-            OC.dialogs.confirm(t(appname, 'Are you sure delete group ')  + groupname, t(appname, 'Sharing_Group'),
-            function(result) {
-                if (result === true) {
-                    GroupList.deleteGroup(id, groupname);
-                    $groupList.find('#' + groupname).remove();
-                    var deleteGroupname = GroupList.groups.indexOf(groupname);
-                    GroupList.groups.splice(deleteGroupname,1);
-                }
-            }, true
-            );
+            // OC.dialogs.confirm(t(appname, 'Are you sure delete group ')  + groupname, t(appname, 'Sharing_Group'),
+            // function(result) {
+            //     if (result === true) {
+            //         GroupList.deleteGroup(id, groupname);
+            //     }
+            // }, true
+            // );
+
+            GroupList.deleteGroup(id, groupname);
+
         } else if ($(event.target).is('.action.rename')) {
             event.stopPropagation();
 			event.preventDefault();

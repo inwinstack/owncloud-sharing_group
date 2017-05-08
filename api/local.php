@@ -77,7 +77,7 @@ class Local {
 					$share['url'] = \OC::$server->getURLGenerator()->linkToRouteAbsolute('files_sharing.sharecontroller.showShare', ['token' => $share['token']]);
 				}
 
-                if(defined('\OCP\Share::SHARE_TYPE_SHARING_GROUP') && $share['share_type'] === \OCP\Share::SHARE_TYPE_SHARING_GROUP) {
+                if(defined('\OCP\Share::SHARE_TYPE_SHARING_GROUP') && $share['share_type'] === \OCP\Share::SHARE_TYPE_SHARING_GROUP && isset($sharing_groups)) {
                     $share['share_with'] = $sharing_groups[$share['share_with']]; 
                     $share['share_with_displayname'] = $sharing_groups[$share['share_with_displayname']]; 
                 }
@@ -159,9 +159,10 @@ class Local {
 			foreach(\OCA\Sharing_Group\Data::readGroups() as $group) {
                 $sharing_groups[$group['id']] = $group['name'];
             }
-		if(isset($sharing_groups)) {	
-		    $shares = self::idToname($shares, $sharing_groups);
-		}
+
+            if(isset($sharing_groups)) {
+			    $shares = self::idToname($shares, $sharing_groups);
+			}
 			
 			return new \OC_OCS_Result($shares);
 		}
