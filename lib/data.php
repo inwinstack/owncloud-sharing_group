@@ -1359,7 +1359,7 @@ class Data{
     
     }
 
-    **
+    /**
      *  rename group password
      *
      *  @param  $gid the sharing group id
