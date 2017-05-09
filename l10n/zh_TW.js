@@ -55,5 +55,8 @@ OC.L10N.register(
     "Select the CSV file" : "選擇 CSV 檔案",
     "This is not a vaild CSV file." : "無效的 CSV 檔案。",
     "Importing groups and friend list successfully." : "成功匯入群組與朋友清單。",
+    "This user not existed in the group." : "使用者不存在此分享群組中。",
+    "This password is not correct." : "密碼不正確。",
+    "This user already joined the group." : "使用者已經加入此分享群組中。",
 },
 "nplurals=1; plural=0;");
