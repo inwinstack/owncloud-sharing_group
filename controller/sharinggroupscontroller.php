@@ -219,7 +219,7 @@ class SharingGroupsController extends Controller{
      * Join sharing group
      * @return DataResponse
      */
-    public function joinGroup($user,$groupId,$owner,$password=''){
+    public function joinGroup($user,$groupId,$password=''){
         if (!$this->data->inGroup($user, $groupId)){
             return new DataResponse(array('message'=>"This user already joined the group." ,'status'=> 'error'));
         }
@@ -230,7 +230,7 @@ class SharingGroupsController extends Controller{
             }
         }
         
-        $result = $this->data->joinGroup($user,$groupId,$owner);
+        $result = $this->data->joinGroup($user,$groupId);
         return new DataResponse(array('status' => $result));
     }
 

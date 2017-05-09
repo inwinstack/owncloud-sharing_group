@@ -1160,11 +1160,12 @@ class Data{
      *
      *  @return success|error
      */
-    public static function joinGroup($user,$groupId,$owner){
+    public static function joinGroup($user,$groupId){
         
-        $sql = 'INSERT INTO `*PREFIX*sharing_group_user`(`gid`, `uid`, `owner`) VALUES (?, ?, ?)';
+        $sql = 'INSERT INTO `*PREFIX*sharing_group_user`(`gid`, `uid`, `owner`) 
+                VALUES (?, ?, (select `uid` from *PREFIX*sharing_groups where `id` = ?))';
         $query = DB::prepare($sql);
-        $result = $query->execute(array($groupId,$user,$owner));
+        $result = $query->execute(array($groupId,$user,$groupId));
         if(DB::isError($result)) {
             Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
     
