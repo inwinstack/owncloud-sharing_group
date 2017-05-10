@@ -222,7 +222,7 @@ class SharingGroupsController extends Controller{
     public function joinGroup($user,$groupId,$password=''){
         //if not owner add user
         $checkResult = $this->data->checkGroupIsOwnerByGid($groupId);
-        if ($checkResult == 'error'){
+        if ($checkResult === 'error'){
             return ;
         }
         else if (!$checkResult){
@@ -233,7 +233,7 @@ class SharingGroupsController extends Controller{
         }
         
         $inGroupResult = $this->data->inGroup($user, $groupId);
-        if ($inGroupResult == 'error'){
+        if ($inGroupResult === 'error'){
             return ;
         }
         
@@ -275,7 +275,7 @@ class SharingGroupsController extends Controller{
      */
     public function leaveGroup($user,$groupId){
         $inGroupResult = $this->data->inGroup($user, $groupId);
-        if ($inGroupResult == 'error'){
+        if ($inGroupResult === 'error'){
             return ;
         }
         else if (!$inGroupResult){
