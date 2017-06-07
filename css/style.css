@@ -42,8 +42,23 @@
     text-overflow: ellipsis;
 }
 
+.isgroup .user-list {
+	cursor: default;
+	width: 95%;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
 /* File actions */
 .menuactions {
+	position: relative;
+	left: 95%;
+	bottom: 15px;
+}
+
+.deletebutton {
 	position: relative;
 	left: 95%;
 	bottom: 15px;
@@ -128,6 +143,16 @@ input.userFilter {width: 200px;}
 	width: 65%;
 }
 
+.isgroup .user-list {
+	width: 85%;
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.isgroup.active .user-list {
+	width: 65%;
+}
+
 .user-count { float: left; margin: 5px; }
 li.active span.utils .delete {
 	float: left; position: relative; opacity: 0.5;
@@ -154,6 +179,22 @@ table span.group-name {
 }
 
 #group-list span.group-name {
+	left: 50px;
+	margin-left: 50px;
+}
+
+table span.user-list {
+    position: relative;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    display: block;
+	top: 15px;
+    /*height: 50px;*/
+    /*line-height: 50px;*/
+    padding: 0;
+}
+
+#group-list span.user-list {
 	left: 50px;
 	margin-left: 50px;
 }
@@ -208,14 +249,7 @@ input.userFilter {width: 200px;}
 #deleteusergroup .multiselect {
 	min-width: 150px !important;
 }
-/* #deleteusergroup .multiselect, */
 
-/*
-#newusergroups + input[type='submit'] {
-	position: relative;
-	top: -1px;
-}
-*/
 #headerGroups,
 #headerSubAdmins,
 #headerQuota {
@@ -234,7 +268,6 @@ input.userFilter {width: 200px;}
 	background-color: #FDD;
 }
 
-
 #selectGroups select {
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
@@ -244,4 +277,47 @@ input.userFilter {width: 200px;}
 	padding: 7px 10px
 }
 
+.nav-icon-mysharegroup  {
+	background-image: url('../img/groups.png');
+	padding-left: 44px;
+    background-size: 16px 16px;
+    background-position: 14px center;
+    background-repeat: no-repeat;
+}
 
+.nav-icon-joinedgroup  {
+	background-image: url('../img/add-groups.png');
+	padding-left: 44px;
+    background-size: 16px 16px;
+    background-position: 14px center;
+    background-repeat: no-repeat;
+}
+
+.nav-icon-stared  {
+	background-image: url('../img/star.png');
+	padding-left: 44px;
+    background-size: 16px 16px;
+    background-position: 14px center;
+    background-repeat: no-repeat;
+}
+
+ul#group-menu span.groups {
+	display: block;
+    width: 100%;
+    line-height: 44px;
+    min-height: 44px;
+    padding: 0 35px;
+    overflow: hidden;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: #000;
+}
+
+div.crumb a, div.crumb span {
+    position: relative;
+    top: 12px;
+    padding: 14px 24px 14px 17px;
+    color: #555;
+}

@@ -11,6 +11,21 @@ var GroupList = {
     group: $.Deferred(),
     groups_name: [],
 
+    $_GET: function(param) {
+        var vars = {};
+        location.href.replace( location.hash, '' ).replace( 
+            /[?&]+([^=&]+)=?([^&]*)?/gi, // regexp
+            function( m, key, value ) { // callback
+                vars[key] = value !== undefined ? value : '';
+            }
+        );
+
+        if ( param ) {
+            return vars[param] ? vars[param] : null;	
+        }
+        return vars;
+    },
+
     elementBelongsToAddGroup: function(el) {
 		return !(el !== $('#newgroup-form').get(0) &&
 		$('#newgroup-form').find($(el)).length === 0);
@@ -186,25 +201,43 @@ var GroupList = {
     getElementGID: function (element) {
 		return ($(element).closest('li').data('gid') || '').toString();
 	},
-    
-    addCheckbox: function(id, name){
-        var label = $('<label>').attr({for: 'id-' + id});
-        var checkbox = $('<input>').attr({
-            type: 'checkbox', 
-            id: 'id-' + id, 
-            checked: false
+
+    addUserLi: function(gid, name){
+        var li = $('<tr>').attr({
+            'data-gid': GroupList.$_GET('gid'), 
+            id: name, 
+            class: 'isgroup'
         });
-        var span = $('<span>').text(name);
-        
-        checkbox.tristate();
-        checkbox.data({
-            'origin': 'unchecked',
-            'click': 0
+        var td = $('<td>').attr({class: 'groupname'});
+        var group = $('<a>');
+        var label = $('<label>').attr({for: 'select-group-4'});
+        var icon_div = $('<div>').attr({class: 'usericon thumbnail'});
+
+        var groupname = $('<span>').attr({class: 'user-list'});
+        var util = $('<span>').attr({class: 'utils'});
+
+        var action_menu = $('<span>').attr({class: 'deletebutton'});
+        $menuLink = $('<a>').attr({
+            class: 'action action-menu permanent',
+            id: 'user_delete'
+        });
+        var menu_icon = $('<img>').attr({
+            class: 'svg', 
+            src: "../../../core/img/actions/delete.png"
         });
         
-        label.append(checkbox);
-        label.append(span);
-        $('.sg-dropdown-scrollable').append(label);
+        $menuLink.append(menu_icon);
+        action_menu.append($menuLink);
+
+        group.append(groupname.text(name));
+        group.append(action_menu);
+
+        label.append(icon_div);
+        td.append(label);
+        td.append(group);
+        li.append(td);
+
+        return li;
     },
 
     addLi: function(gid, name, count, user){
@@ -234,7 +267,7 @@ var GroupList = {
         });
         
         if (user != null){
-            user = user.split(",", count);
+            user = user.split(',', count);
             $('#group-list').data(gid, user);
         }
         else {
@@ -258,9 +291,10 @@ var GroupList = {
 		$.get(
 			OC.generateUrl('/apps/sharing_group/getCreatedGroups'),
 			function(result) {
-                 $('.loading').css('visibility', 'hidden');
+                 $('.loading').remove();
                  $.each(result.data, function(index, group) {
                     GroupList.groups.push(group.gid);
+                    GroupList.groups_name.push(index);
 
                     $GroupListLi.after(GroupList.addLi(group.gid, index, group.count, group.user));
                     GroupList.sortGroups();
@@ -269,6 +303,41 @@ var GroupList = {
 			}
 		);
 	},
+
+    showGroupUsers: function(gid) {
+        $.get(
+			OC.generateUrl('/apps/sharing_group/getUsersInGroup'),
+            {
+                gid: gid
+            },
+			function(result) {
+                 $('.loading').remove();
+                 $.each(result.data, function(index, group) {
+                    GroupList.groups.push(group.gid);
+
+                    $GroupListLi.after(GroupList.addUserLi(group.gid, index));
+                    GroupList.sortGroups();
+                    GroupList.initgroup.resolve(result);
+                });
+			}
+		);
+    },
+
+    showFavoriteGroups: function() {
+        $.get(
+	        OC.generateUrl('/apps/sharing_group/getFavoriteGroups'),
+            function(result) {
+                $('.loading').remove();
+                $.each(result.data, function(index, group) {
+                GroupList.groups.push(group.gid);
+                GroupList.groups_name.push(index);
+
+                $GroupListLi.after(GroupList.addLi(group.gid, index, group.count, group.user));
+                GroupList.sortGroups();
+                GroupList.initgroup.resolve(result);
+            });
+        });
+    },
     
     refreshGroupList: function() {
         $.get(
@@ -316,7 +385,6 @@ var GroupList = {
 			OC.generateUrl('/apps/sharing_group/create'),
 			{
 				name: groupname,
-                password: 'test'
 			},
 			function(result) {
                 if (result.status == 'success') {
@@ -330,6 +398,25 @@ var GroupList = {
 				GroupList.toggleAddGroup();
 		});
 	},
+
+    createGroupUsers : function(user, groupId) {
+        $.post(
+            OC.generateUrl('/apps/sharing_group/joinGroup'),
+            {
+                user: user,
+                groupId: groupId
+            },
+            function (result) {
+                if (result.status == 'success') {
+				    $GroupListLi.after(GroupList.addUserLi(groupId, user));
+                    GroupList.sortGroups();
+                }
+                else {
+				    OC.dialogs.alert(t(appname, 'User already exists'), t(appname, 'Error join user'));
+                }
+				GroupList.toggleAddGroup();
+            });
+    },
 
     sortGroups: function() {
 		var lis = $groupList.find('.isgroup').get();
@@ -373,6 +460,50 @@ var GroupList = {
 			$groupList.append(items);
 		}
 	},
+
+    addGroupToFavorite: function (gid) {
+        $.post(
+	        OC.generateUrl('/apps/sharing_group/addFavoriteGroup'),
+			{
+                user: oc_current_user,
+				groupId: gid
+			}, 
+            function(result) {
+                if (result.status === 'success') {
+				    // $GroupListLi.after(GroupList.addLi(result.gid, groupname, 0, null));
+                    // GroupList.groups_name.push(groupname);
+                    // GroupList.sortGroups();
+
+                    OC.Notification.showTemporary(t(appname, 'add favotire group success'));
+                }
+                else {
+                    OC.Notification.showTemporary(t(appname, 'add group to favorite failed'));
+                }
+        });
+    },
+
+    leaveGroupFromFavorite: function (gid){
+        $.post(
+	        OC.generateUrl('/apps/sharing_group/leaveFavoriteGroup'),
+			{
+                user: oc_current_user,
+				groupId: gid
+			}, 
+            function(result) {
+                $('.fileActionsMenu').remove();
+                if (result.status === 'success') {
+                    var index = '#' + GroupList.groups_name[GroupList.groups.indexOf(String(gid))];
+                    $(index).remove();
+                    OC.Notification.showTemporary(t(appname, 'delete favotire group success'));
+                    // setTimeout(function() {
+                    //     location.reload();
+                    // }, 800);
+                }
+                else {
+                    OC.Notification.showTemporary(t(appname, 'delete favotire group failed'));
+                }
+        });
+    },
     
     deleteGroup: function (gid, groupname) {
         $.post(
@@ -386,12 +517,33 @@ var GroupList = {
                     var index = '#' + GroupList.groups_name[GroupList.groups.indexOf(String(gid))];
                     $(index).remove();
                     OC.Notification.showTemporary(t(appname, 'delete group success'));
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1000);
+                    // setTimeout(function() {
+                    //     location.reload();
+                    // }, 800);
                 }
                 else {
                     OC.Notification.showTemporary(t(appname, 'delete group failed'));
+                }
+            });
+    },
+
+    deleteGroupUser: function (uid, gid) {
+        $.post(
+	        OC.generateUrl('/apps/sharing_group/leaveGroup'),
+			{
+				user: uid,
+                groupId: gid
+			}, 
+            function(result) {
+                if (result.status === 'success') {
+
+                    OC.Notification.showTemporary(t(appname, 'delete user success'));
+                    setTimeout(function() {
+                        location.reload();
+                    }, 800);
+                }
+                else {
+                    OC.Notification.showTemporary(t(appname, 'delete user failed'));
                 }
             });
     },
@@ -402,7 +554,20 @@ $(function() {
     
 	$GroupListLi = $('#group-list #everyone-group');
 	$GroupListLi.after($('<div class="loading" style="height: 200px; visibility: visible;"></div>'));
-    GroupList.showGroupList();
+
+    //GroupList.createGroupUsers();
+
+    if (GroupList.$_GET('favorite') === "1") {
+        GroupList.showFavoriteGroups();
+
+    }
+    else if (GroupList.$_GET('gid') === null) {
+        GroupList.showGroupList();
+    } 
+    else {
+        GroupList.showGroupUsers(GroupList.$_GET('gid'));
+    }
+    
     // Display or hide of Create Group List Element
 	$('#newgroup-form').hide();
 	$('#newgroup-initial').on('click', function(e) {
@@ -420,6 +585,10 @@ $(function() {
         }
 	});
 
+    $('.breadcrumb').on('click', 'div.crumb.svg.ui-droppable', function () {
+        location.href = location.protocol + '//' + location.host + location.pathname;
+    });
+
     $('.grouptable').on('click', '.menuactions', function (event) {
         event.stopPropagation();
 
@@ -435,12 +604,21 @@ $(function() {
         var TEMPLATE_MENU =
             '<ul>' +
             '<li>' +
-            '<a href="#" class="menuitem action action-details permanent" id="action_delete"><span class="no-icon"></span><span>Delete</span></a>' +
+            '<a href="#" class="menuitem action action-details permanent" id="action_delete"><img class="icon" src="../../../core/img/actions/delete.svg"></span><span>Delete</span></a>' +
+            '</li>' +
+            '<li style="margin: 20px 0">' +
+            '<a href="#" class="menuitem action action-details permanent" id="action_rename"><img class="icon" src="../../../core/img/actions/rename.svg"></span><span>Rename</span></a>' +
+            '</li>' +
+            '<li style="margin: 20px 0">' +
+            '<a href="#" class="menuitem action action-details permanent" id="action_favorite"><img class="icon" src="../../../apps/files/img/star.svg"></span><span>Add Favorite</span></a>' +
+            '</li>' +
+            '<li style="margin: 20px 0">' +
+            '<a href="#" class="menuitem action action-details permanent" id="action_favorite_remove"><img class="icon" src="../../../apps/files/img/star.svg"></span><span>Remove Favorite</span></a>' +
             '</li>' +
             '</ul>';
 
-        menuClass.css('min-height', '50px');
-        menuClass.css('min-width', '100px');
+        menuClass.css('min-height', '110px');
+        menuClass.css('min-width', '150px');
         menuClass.append(TEMPLATE_MENU);
 
         //parentNode belongs which tr #id
@@ -461,7 +639,11 @@ $(function() {
 			GroupList.toggleAddGroup();
 		}
         if (event.which === $.ui.keyCode.ENTER && GroupList.isGroupNameValid(newgroupname.val()) && !newgroupname.hasClass('ui-status-error')) {
-            GroupList.createGroup(newgroupname.val());
+            if (GroupList.$_GET('gid') === null) {
+                GroupList.createGroup(newgroupname.val());
+            } else {
+                GroupList.createGroupUsers(newgroupname.val(), GroupList.$_GET('gid'));
+            }
         }
 
     });
@@ -470,22 +652,13 @@ $(function() {
 		//event.preventDefault();
         var newgroupname = $('#newgroup-name');
         if(GroupList.isGroupNameValid(newgroupname.val()) && !newgroupname.hasClass('ui-status-error')) {
-			GroupList.createGroup(newgroupname.val());
+			if (GroupList.$_GET('gid') === null) {
+                GroupList.createGroup(newgroupname.val());
+            } else {
+                GroupList.createGroupUsers(newgroupname.val(), GroupList.$_GET('gid'));
+            }
         }
 	});
-
-	// click on group name
-	// $groupList.on('click', '#action_delete', function(event) {
-    //     var group = $(this);
-    //     if($(event.target).is('.action.delete')) {
-    // ($(event.target).is('.action.rename')) {
-    //         event.stopPropagation();
-	// 		event.preventDefault();
-    //         GroupList.editGroup(group);
-    //     } else {
-    //         GroupList.showGroup(GroupList.getElementGID(group));
-    //     }
-    // });
 
     $('.grouptable').on('click', '#action_delete', function(event) {
         var group = $(this);
@@ -503,14 +676,44 @@ $(function() {
 
             GroupList.deleteGroup(id, groupname);
 
-        } else if ($(event.target).is('.action.rename')) {
-            event.stopPropagation();
-			event.preventDefault();
-            GroupList.editGroup(group);
-        } else {
-            GroupList.showGroup(GroupList.getElementGID(group));
-        }
+        } 
     });
+
+    $('.grouptable').on('click', '#action_favorite', function(event) {
+        var group = $(this);
+        if($(event.target).is('span')) {
+			var gid = group.find('span').closest('tr').data('gid');
+            var groupname = group.find('.group-name').text();
+
+            GroupList.addGroupToFavorite(gid);
+        } 
+    });
+
+    $('.grouptable').on('click', '#action_favorite_remove', function(event) {
+        var group = $(this);
+        if($(event.target).is('span')) {
+			var gid = group.find('span').closest('tr').data('gid');
+            var groupname = group.find('.group-name').text();
+
+            GroupList.leaveGroupFromFavorite(gid);
+        } 
+    });
+
+    $('.grouptable').on('click', 'span.deletebutton', function(event) {
+        //parentNode belongs which span.userlist
+        var username = this.parentNode.innerText.toString();
+        username = username.replace(/\n/, '');
+
+        GroupList.deleteGroupUser(username, GroupList.$_GET('gid'));
+    });
+
+    $('.grouptable').on('click', 'span.group-name', function(event) {
+        var index = GroupList.groups_name.indexOf(event.target.innerText);
+        
+        location.href = location.href.slice(0, location.href.lastIndexOf('/'));
+        location.href = location.protocol + '//' + location.host + location.pathname + '?gid=' + GroupList.groups[index];
+    });
+
     
     $('.sg-dropdown-scrollable').delegate('input:checkbox', 'change', function() {
         var checkbox = $(this);
@@ -540,6 +743,16 @@ $(function() {
             UserList.checktristate(group.id); 
         });
 
+    });
+
+    $('#favorite-sharegroups').click( function() { 
+        location.href = location.href.slice(0, location.href.lastIndexOf('/'));
+        location.href = location.protocol + '//' + location.host + location.pathname + '?favorite=1';
+    });
+
+    $('.nav-icon-mysharegroup').click( function() {     
+        location.href = location.href.slice(0, location.href.lastIndexOf('/'));
+        location.href = location.protocol + '//' + location.host + location.pathname;
     });
     
     $('#multi-group-select').click(function() {

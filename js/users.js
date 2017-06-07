@@ -420,22 +420,22 @@ $(function () {
     UserList.update(UserList.currentGid, initialUserCountLimit);
     
     // the first loading
-    // $.when(UserList.user, GroupList.initgroup).done(function (users, groups){
-	//     $GroupListLi.siblings('.loading').remove();
-    //     $.each(groups.data, function(index, group) {
-    //         GroupList.groups.push(group.id);
-    //         GroupList.groups_name.push(group.name);
+    $.when(UserList.user, GroupList.initgroup).done(function (users, groups){
+	    // $GroupListLi.siblings('.loading').remove();
+        // $.each(groups.data, function(index, group) {
+        //     GroupList.groups.push(group.id);
+        //     GroupList.groups_name.push(group.name);
 
-    //         $GroupListLi.after(GroupList.addLi(group.id, group.name, group.count, group.user));
-    //         GroupList.sortGroups();
-    //     });
+        //     $GroupListLi.after(GroupList.addLi(group.id, group.name, group.count, group.user));
+        //     GroupList.sortGroups();
+        // });
         
-    //     UserList.init(users);
+        UserList.init(users);
 
-    //     if(UserList.currentGid == '') {
-    //         UserList.currentGid = '_everyone';
-    //         UserList.append(users, UserList.usersToLoad, UserList.currentGid);
-    //     }
-    // });
+        if(UserList.currentGid == '') {
+            UserList.currentGid = '_everyone';
+            UserList.append(users, UserList.usersToLoad, UserList.currentGid);
+        }
+    });
     
 });

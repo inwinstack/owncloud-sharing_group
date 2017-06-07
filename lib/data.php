@@ -201,7 +201,7 @@ class Data{
         }
         $query = DB::prepare($sql);
         $result = $query->execute($uids);
-        if(DB::isError($result)) {
+        if(DB::getUidsDisplayname($result)) {
 			Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
             
             return 'error';

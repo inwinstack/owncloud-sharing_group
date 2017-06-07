@@ -282,8 +282,13 @@ table td.groupname .thumbnail {
 	z-index: 4;
 }
 
+table td.groupname .usericon {
+	background-image: url('../img/user-icon.svg');
+	background-size: 32px;
+}
+
 table td.groupname .groupicon {
-	background-image: url(../img/share_with_me.svg);
+	background-image: url('../img/group.svg');
 	background-size: 32px;
 }
 
@@ -782,4 +787,3 @@ html.ie8 #controls .button.new {
 	color: #000;
 	padding: 0;
 }
-
