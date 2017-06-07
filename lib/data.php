@@ -822,7 +822,7 @@ class Data{
      *  
      *  @param int $gid the sharing group id
      *  @param string $uid the sharing group user 
-     *  @return bool
+     *  @return bool/string
      */
     public static function inGroup($uid, $gid) {
         $query = DB::prepare('SELECT `uid` FROM `*PREFIX*sharing_group_user` WHERE `gid` = ? AND `uid` = ?');
@@ -830,7 +830,7 @@ class Data{
 
         if(DB::isError($result)) {
 		    Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
-            return false;
+            return 'error';
         }
 
         if ($result->rowCount() > 0){
@@ -1447,6 +1447,31 @@ class Data{
         ksort($data,SORT_NATURAL | SORT_FLAG_CASE);
     
         return $data;
+    }
+
+    /**
+     *  check group owner is loggined user
+     *
+     *  @return bool string 'error'
+     */
+    public static function checkGroupIsOwnerByGid($gid){
+        $user = User::getUser();
+       
+        $sql = "SELECT * FROM `*PREFIX*sharing_groups` WHERE `uid` = ? and `id`= ?";
+    
+        $query = DB::prepare($sql);
+        $result = $query->execute(array($user,$gid));
+    
+        if (DB::isError($result)) {
+            Util::writeLog('SharingGroup', DB::getErrorMessage($result), Util::ERROR);
+    
+            return 'error';
+        }
+        if ($result->rowCount() > 0){
+            return true;
+        }
+        return false;
+    
     }
 }
 

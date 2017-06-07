@@ -220,14 +220,25 @@ class SharingGroupsController extends Controller{
      * @return DataResponse
      */
     public function joinGroup($user,$groupId,$password=''){
-        if (!$this->data->inGroup($user, $groupId)){
-            return new DataResponse(array('message'=>"This user already joined the group." ,'status'=> 'error'));
+        //if not owner add user
+        $checkResult = $this->data->checkGroupIsOwnerByGid($groupId);
+        if ($checkResult === 'error'){
+            return ;
         }
-        
-        if (User::getUser() !== $owner){
+        else if (!$checkResult){
+            
             if (!$this->data->checkPassword($groupId,$password)){
                 return new DataResponse(array('message'=>"This password is not correct." ,'status'=> 'error'));
             }
+        }
+        
+        $inGroupResult = $this->data->inGroup($user, $groupId);
+        if ($inGroupResult === 'error'){
+            return ;
+        }
+        
+        else if ($inGroupResult){
+            return new DataResponse(array('message'=>"This user already joined the group." ,'status'=> 'error'));
         }
         
         $result = $this->data->joinGroup($user,$groupId);
@@ -263,7 +274,11 @@ class SharingGroupsController extends Controller{
      * @return DataResponse
      */
     public function leaveGroup($user,$groupId){
-        if (!$this->data->inGroup($user, $groupId)){
+        $inGroupResult = $this->data->inGroup($user, $groupId);
+        if ($inGroupResult === 'error'){
+            return ;
+        }
+        else if (!$inGroupResult){
             return new DataResponse(array('message'=>"This user not existed in the group." ,'status'=> 'error'));
         }
         $result = $this->data->leaveGroup($user,$groupId);
