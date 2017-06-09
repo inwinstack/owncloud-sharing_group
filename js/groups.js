@@ -745,14 +745,14 @@ $(function() {
 
     });
 
-    $('#favorite-sharegroups').click( function() { 
-        location.href = location.href.slice(0, location.href.lastIndexOf('/'));
-        location.href = location.protocol + '//' + location.host + location.pathname + '?favorite=1';
+    $('#favorite-sharegroups').click( function(event) {
+        $('.isgroup').remove();
+        GroupList.showFavoriteGroups();
     });
 
-    $('.nav-icon-mysharegroup').click( function() {     
-        location.href = location.href.slice(0, location.href.lastIndexOf('/'));
-        location.href = location.protocol + '//' + location.host + location.pathname;
+    $('.nav-icon-mysharegroup').click( function() {
+        $('.isgroup').remove();
+        GroupList.showGroupList();
     });
     
     $('#multi-group-select').click(function() {

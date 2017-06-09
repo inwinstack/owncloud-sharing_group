@@ -14,7 +14,7 @@
         </a>
     </li>
     <li id="favorite-sharegroups">
-        <a class="icon-favorite svg" href="favorite">
+        <a class="icon-favorite svg" href="">
         <span class="groups"><?php p($l->t('My favorite share groups'))?></span>
         </a>
     </li>

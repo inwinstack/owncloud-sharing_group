@@ -9,7 +9,7 @@
         </tr>
     </thead>
     <tbody id="group-list" data-sort-groups="" class="filename">
-        <tr id="everyone-group" data-gid="_everyone" data-usercount="" class="isgroup" style="display: none">
+        <tr id="everyone-group" data-gid="_everyone" data-usercount="" style="display: none">
         </tr>
     </tbody>
     <tfoot>
